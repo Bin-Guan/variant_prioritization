@@ -24,7 +24,7 @@ OGLanno <- read_tsv(Input_file, col_names = TRUE, na = c("NA", "", "None", "NONE
          'omim_gene', 'omim_inheritance', 'omim_phen', 'pvs1', 'truncating_vep', 'hgmd_id',
          'hgmd_class', 'hgmd_phen', 'hgmd_overlap4aa', 'existing_variation', 'clnalleleid',
          'clnsig', 'clin_sig', 'clnrevstat', 'clndn', 'clndisdb') %>% 
- filter(gene == geneNames | ref_gene == geneNames)
+ filter(func_refgenewithver == geneNames)
 
 write_tsv(OGLanno, output_file, na = ".")
 

@@ -51,8 +51,12 @@ sortFilterGemini <- function(fileName) {
                                           TRUE ~ 152312)) %>%
       mutate(gno2x_filter = ifelse(gno2x_an_all > 0 & is.na(gno2x_filter) & gno2x_an_all < gno2x_expected_an/2, "AN<half", gno2x_filter),
              gno3_filter = ifelse(gno3_an_all > 0 & is.na(gno3_filter) & gno3_an_all < gno3_expected_an/2, "AN<half", gno3_filter) ) %>%
-      mutate(eyeGene = case_when(panel_class == "Dx" ~ 2,
-                                 panel_class == "Candidate" ~ 1,
+      mutate(eyeGene = case_when(panel_class == "Dx" ~ 9,
+                                 panel_class == "Candidate-High" ~ 8,
+                                 panel_class == "Candidate-refutedDxGene" ~ 7,
+                                 panel_class == "Candidate" ~ 6,
+                                 panel_class == "Dx-modifier-rare" ~ 3,
+                                 panel_class == "Dx-modifier-common" ~ 2,
                                  TRUE ~ 0)) %>% 
       select(-gno2x_expected_an, -gno3_expected_an) %>%
       mutate(aaf = round(aaf, 3),

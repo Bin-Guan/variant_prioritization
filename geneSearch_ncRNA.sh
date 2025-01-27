@@ -11,7 +11,7 @@
 
 set -e
 
-geneName=$1
+geneName=$1 #$1 is the type in func_refgenewithver, i.e. ncRNA_exonic
 TIMESTAMP=$(date "+%Y%m%d-%H%M%S")
 YEARSTAMP=$(date "+%Y%m%d")
 
@@ -21,7 +21,7 @@ module load R/4.3.0
 
 #exome
 for file in /data/OGL/resources/GeneSearch/exome/gemini_tsv_filtered/*.tsv; do 
-	Rscript ~/git/variant_prioritization/dev/geneSearch_exome.R $file $geneName $(basename $file | cut -d. -f 1) /lscratch/$SLURM_JOB_ID/temp-$TIMESTAMP/$(basename $file);
+	Rscript ~/git/variant_prioritization/dev/geneSearch_exome_ncRNA.R $file $geneName $(basename $file | cut -d. -f 1) /lscratch/$SLURM_JOB_ID/temp-$TIMESTAMP/$(basename $file);
 	done
 head -n 1 $(ls /lscratch/$SLURM_JOB_ID/temp-$TIMESTAMP/*.filtered.tsv | head -n 1) > /lscratch/$SLURM_JOB_ID/temp-$TIMESTAMP/"$geneName".tsv
 for file in /lscratch/$SLURM_JOB_ID/temp-$TIMESTAMP/*.filtered.tsv; do tail -n +2 $file >> /lscratch/$SLURM_JOB_ID/temp-$TIMESTAMP/"$geneName".tsv; done
@@ -31,7 +31,7 @@ rm /lscratch/$SLURM_JOB_ID/temp-$TIMESTAMP/*
 
 #genome
 for file in /data/OGL/resources/GeneSearch/genome/gemini_tsv_filtered/*.tsv; do 
-	Rscript ~/git/variant_prioritization/dev/geneSearch.R $file $geneName /lscratch/$SLURM_JOB_ID/temp-$TIMESTAMP/$(basename $file);
+	Rscript ~/git/variant_prioritization/dev/geneSearch_ncRNA.R $file $geneName /lscratch/$SLURM_JOB_ID/temp-$TIMESTAMP/$(basename $file);
 	done
 head -n 1 $(ls /lscratch/$SLURM_JOB_ID/temp-$TIMESTAMP/*.filtered.tsv | head -n 1) > /lscratch/$SLURM_JOB_ID/temp-$TIMESTAMP/"$geneName".tsv
 for file in /lscratch/$SLURM_JOB_ID/temp-$TIMESTAMP/*.filtered.tsv; do tail -n +2 $file >> /lscratch/$SLURM_JOB_ID/temp-$TIMESTAMP/"$geneName".tsv; done

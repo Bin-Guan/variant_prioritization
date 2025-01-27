@@ -13,8 +13,23 @@
 
 args <- commandArgs(trailingOnly=TRUE)
 
-#args <- c("gemini_tsv/D1280_01_BP70015.BP.blueprint_pedigree.gemini.tsv",
-#           "gemini_tsv/D1280_01_BP70015.BP.blueprint_pedigree.gemini.ref.tsv", "Z:/resources/OGLpanelGeneDxORcandidate.xlsx", "rearranged.tsv", "filtered.tsv", "108976P", "filtered.xlsx", "0.5", "W:/ddl_nisc_custom_capture/042020/CoNVaDING/CNV_hiSens/108976P.b37.aligned.only.best.score.shortlist.txt")
+# args <- c("gemini_tsv/RY1.ChileMAC.chileanMAC.gemini.tsv",
+#           "gemini_tsv/RY1.ChileMAC.chileanMAC.gemini.ref.tsv",
+#           "Z:/resources/OGLpanelGeneDxORcandidate.xlsx",
+#           "gemini_tsv/RY1.ChileMAC.chileanMAC.gemini.rearranged.tsv",
+#           "gemini_tsv_filtered/RY1.ChileMAC.chileanMAC.gemini.filtered.tsv",
+#           "RY1",
+#           "gemini_xlsx/RY1.ChileMAC.chileanMAC.gemini.filtered.xlsx",
+#           "1.1",
+#           "../manta/manta.RY1.annotated.tsv",
+#           "Z:/resources/manta/manta.OGL.freq.2022-09.tsv",
+#           "../jax-cnv/RY1.jaxcnv.annotated.tsv",
+#           "Z:/resources/jaxCNV/jaxCNV.OGL.freq.2025-01.tsv",
+#           "../AutoMap/RY1/RY1.HomRegions.annot.tsv",
+#           "../scramble_anno/RY1.scramble.xlsx",
+#           "filePlaceholder",
+#           "config_variant_prioritization.yaml",
+#           "../clinSV/RY1.clinSV.RARE_PASS_GENE.eG.filtered.xlsx")
 
 gemini_file <- args[1]
 gemini_ref_var_file <- args[2]
@@ -26,13 +41,15 @@ gemini_xlsx_file <- args[7]
 aafCutoff <- args[8]
 manta_file <- args[9]
 manta_freq_file <- args[10]
-roh_file <- args[11]
-scramble_mei_file <- args[12]
-scramble_del_file <- args[13]
-config_file <- args[14]
-clinsv_file <- args[15]
-convading_file <- args[16]
-convading_LAF <- args[17]
+jaxcnv_file <- args[11]
+jaxcnv_freq_file <- args[12]
+roh_file <- args[13]
+scramble_mei_file <- args[14]
+scramble_del_file <- args[15]
+config_file <- args[16]
+clinsv_file <- args[17]
+convading_file <- args[18]
+convading_LAF <- args[19]
 
 library(tidyverse)
 library(readxl)
@@ -41,7 +58,7 @@ library(RColorBrewer)
 gemini_input <- read_tsv(gemini_file, col_names = TRUE, na = c("NA", "", "None", "NONE", ".", "FALSE", "False"), col_types = cols(.default = col_character())) %>%
   mutate(atac_rpe_score = gsub(",", "_", atac_rpe_score)) %>% 
   type_convert() %>% mutate(exon = sub("^", " ", exon), intron = sub("^", " ", intron)) %>% 
-  rename_all(funs(str_replace(., sampleName, ""))) %>% rename_all(funs(str_replace(., "\\.$", "")))
+  rename_with(., ~ sub(paste0("\\.", sampleName, "$"), "", .x))
 print("###gemini tsv loaded### 10%")
 gemini <-  gemini_input %>% mutate( start_vcf = start + 1 ) %>% 
   unite("chr_variant_id", chrom, start_vcf, ref, alt, sep = "-", remove = FALSE ) %>% 
@@ -103,7 +120,11 @@ gemini_rearrangeCol <- left_join(gemini_max_priority_score, panelGene, by = c("r
   mutate(gno2x_filter = ifelse(gno2x_an_all > 0 & is.na(gno2x_filter) & gno2x_an_all < gno2x_expected_an/2, "Less50", gno2x_filter),
          gno3_filter = ifelse(gno3_an_all > 0 & is.na(gno3_filter) & gno3_an_all < gno3_expected_an/2, "Less50", gno3_filter) ) %>%
   mutate(eyeGene = case_when(panel_class == "Dx" ~ 2,
+                             panel_class == "Candidate-High" ~ 1.6,
+                             panel_class == "Candidate-refutedDxGene" ~ 1.4,
                              panel_class == "Candidate" ~ 1,
+                             panel_class == "Dx-modifier-rare" ~ 0.8,
+                             panel_class == "Dx-modifier-common" ~ 0.6,
                              TRUE ~ 0)) %>% 
   select(-gno2x_expected_an, -gno3_expected_an) %>% 
   mutate(gt_alt_freqs = round(gt_alt_freqs,2),
@@ -145,7 +166,7 @@ if (nrow(gemini_ref_var_input) == 0) {
   gemini_ref_var_input <- gemini_ref_var_input %>%
     mutate(atac_rpe_score = sub(",", "_", atac_rpe_score)) %>% 
     type_convert() %>% mutate(exon = sub("^", " ", exon), intron = sub("^", " ", intron)) %>% 
-    rename_all(funs(str_replace(., sampleName, ""))) %>% rename_all(funs(str_replace(., "\\.$", ""))) %>% 
+    rename_with(., ~ sub(paste0("\\.", sampleName, "$"), "", .x)) %>% 
     mutate( start_vcf = start + 1 ) %>% 
     unite("chr_variant_id", chrom, start_vcf, ref, alt, sep = "-", remove = FALSE ) %>%
     mutate(sample = sampleName) %>%
@@ -171,7 +192,11 @@ if (nrow(gemini_ref_var_input) == 0) {
     mutate(gno2x_filter = ifelse(gno2x_an_all > 0 & is.na(gno2x_filter) & gno2x_an_all < gno2x_expected_an/2, "Less50", gno2x_filter),
            gno3_filter = ifelse(gno3_an_all > 0 & is.na(gno3_filter) & gno3_an_all < gno3_expected_an/2, "Less50", gno3_filter) ) %>%
     mutate(eyeGene = case_when(panel_class == "Dx" ~ 2,
+                               panel_class == "Candidate-High" ~ 1.6,
+                               panel_class == "Candidate-refutedDxGene" ~ 1.4,
                                panel_class == "Candidate" ~ 1,
+                               panel_class == "Dx-modifier-rare" ~ 0.8,
+                               panel_class == "Dx-modifier-common" ~ 0.6,
                                TRUE ~ 0)) %>% 
     select(-gno2x_expected_an, -gno3_expected_an) %>% 
     mutate(gt_alt_freqs = round(gt_alt_freqs,2),
@@ -250,13 +275,16 @@ if ( !file.exists(manta_file)) {
         separate(Location, c('temp_location1', 'temp_location2'), sep = "-", remove = FALSE, convert = FALSE) %>% 
         filter(!(grepl("intron", temp_location1) & temp_location1 == temp_location2 & (!is.na(B_gain_source) | !is.na(B_loss_source) | !is.na(B_ins_source)) )) %>% #remove del,dup,ins,bnd if only in one intron and present in benign databases
         filter(!(grepl("intron", temp_location1) & temp_location1 == temp_location2 & SV_type %in% c("DEL", "INS", "DUP") )) %>% #remove del,dup,ins if only in one intron even not found in benign database
-        select(-starts_with('temp_'), -variant) %>% 
-        mutate(ref_gene = toupper(Gene_name))
-      manta_sort <- left_join(manta, panelGene, by = c("ref_gene")) %>% 
+        select(-starts_with('temp_'), -variant) 
+       manta_sort <- left_join(manta, panelGene, by = c("Gene_name" = "ref_gene")) %>%
         mutate(note = "") %>% 
         mutate(panel_class == ifelse(SV_type == "BND" & ( ( SV_chrom %in% c("X", "chrX") & between(SV_start, 140420272, 140421278) | ( grepl("chrX|X", ALT) & between(as.numeric(gsub("\\D", "", ALT)), 140420272, 140421278) ) )), "Dx", panel_class)) %>% 
         mutate(eyeGene = case_when(panel_class == "Dx" ~ 2,
+                                   panel_class == "Candidate-High" ~ 1.6,
+                                   panel_class == "Candidate-refutedDxGene" ~ 1.4,
                                    panel_class == "Candidate" ~ 1,
+                                   panel_class == "Dx-modifier-rare" ~ 0.8,
+                                   panel_class == "Dx-modifier-common" ~ 0.6,
                                    SV_type == "BND" & ( ( SV_chrom %in% c("X", "chrX") & between(SV_start, 140420272, 140421278) | ( grepl("chrX|X", ALT) & between(as.numeric(gsub("\\D", "", ALT)), 140420272, 140421278) ) )) ~ 3,
                                    ( SV_chrom %in% c("17", "chr17") & between(SV_start, 59105674, 59683460) ) | ( grepl("chr17|17", ALT) & between(as.numeric(gsub("\\D", "", ALT)), 59105674, 59683460) )  ~ 2.5,
                                    TRUE ~ 0)) %>% # GRCh38 coordinates
@@ -268,6 +296,50 @@ if ( !file.exists(manta_file)) {
       }
 }
 #SV_type TRA?? in manta call.
+
+jaxcnv_freq <- read_tsv(jaxcnv_freq_file, col_names = TRUE, na = c("NA", "full=NA", "", "None", "NONE", "."), col_types = cols(.default = col_character())) %>%
+  type_convert()
+
+if ( !file.exists(jaxcnv_file)) {
+  jaxcnv_sort <- data.frame("sample" = sampleName, "note" = "No jaxcnv calling")
+} else if (file.size(jaxcnv_file) == 0) {
+  jaxcnv_sort <- data.frame("sample" = sampleName, "note" = "Empty jaxcnv")
+} else {
+  jaxcnv_original <- read_tsv(jaxcnv_file, col_names = TRUE, na = c("NA", "full=NA", "", "None", "NONE", "."), col_types = cols(.default = col_character())) %>%
+    mutate(ACMG_class = sub("full=", "", ACMG_class)) %>% 
+    type_convert() 
+  if (nrow(jaxcnv_original) == 0) {
+    jaxcnv_sort <- data.frame("sample" = sampleName, "note" = "No PASS jaxcnv call") 
+  } else { jaxcnv1 <- jaxcnv_original %>% mutate(temp_SV_start = round(SV_start, -3), temp_SV_end = round(SV_end, -3)) %>%
+    unite("variant", SV_chrom, temp_SV_start, temp_SV_end, SVtype, sep = "-", remove = FALSE) %>% 
+    left_join(., jaxcnv_freq, by = c("variant") ) %>% 
+    filter(is.na(CohortFreq) | CohortFreq < 0.025) %>% 
+    filter( Annotation_mode == "split" | Gene_count == 0)
+  if (nrow(jaxcnv1) == 0) {
+    jaxcnv_sort <- data.frame("sample" = sampleName, "note" = "No rare jaxcnv call") 
+  } else {
+    jaxcnv <- jaxcnv1 %>%
+      mutate(ACMG_class = case_when(!is.na(ACMG_class) & SVtype == "DEL" & !is.na(B_loss_source) ~ ACMG_class - 2,
+                                    !is.na(ACMG_class) & SVtype == "DUP" & !is.na(B_gain_source) ~ ACMG_class - 1,
+                                    SV_chrom %in% c("17", "chr17") & ( between(SV_start, 59105674, 59683460) | between(SV_end, 59105674, 59683460) ) ~ 5,
+                                    TRUE ~ ACMG_class ) )
+    jaxcnv_sort <- left_join(jaxcnv, panelGene, by = c("Gene_name" = "ref_gene")) %>% 
+      mutate(note = "") %>% 
+      mutate(panel_class == ifelse(SV_chrom %in% c("17", "chr17") & ( between(SV_start, 59105674, 59683460) | between(SV_end, 59105674, 59683460) ), "Dx", panel_class)) %>% 
+      mutate(eyeGene = case_when(panel_class == "Dx" ~ 2,
+                                 panel_class == "Candidate-High" ~ 1.6,
+                                 panel_class == "Candidate-refutedDxGene" ~ 1.4,
+                                 panel_class == "Candidate" ~ 1,
+                                 panel_class == "Dx-modifier-rare" ~ 0.8,
+                                 panel_class == "Dx-modifier-common" ~ 0.6,
+                                 SV_chrom %in% c("17", "chr17") & ( between(SV_start, 59105674, 59683460) | between(SV_end, 59105674, 59683460) ) ~ 3,
+                                 TRUE ~ 0)) %>% # GRCh38 coordinates
+      arrange(desc(eyeGene), desc(ACMG_class)) %>% 
+      mutate(note = ifelse(SV_chrom %in% c("17", "chr17") & ( between(SV_start, 59105674, 59683460) | between(SV_end, 59105674, 59683460) ), "RP17", note)) %>% 
+      select(AnnotSV_ID:Gene_name,panel_class,ACMG_class,note,CohortFreq,`NaltP/NtotalP`,OGLsamples,OMIM_phenotype:GnomAD_pLI,Frameshift,everything() )
+  }
+  }
+}
 
 if ( roh_file == "filePlaceholder") {
   roh <- data.frame("sample" = sampleName, "note" = "Roh not analyzed.")
@@ -312,8 +384,12 @@ if (scramble_del_file == "filePlaceholder") {
     rename(ref_gene = "Gene_name")
   scramble_del_sort <- left_join(scramble_del, panelGene, by = c("ref_gene")) %>% 
     mutate(note = "") %>% 
-    mutate(eyeGene = case_when(panel_class == "Dx" ~ 2,
-                               panel_class == "Candidate" ~ 1,
+    mutate(eyeGene = case_when(panel_class == "Dx" ~ 9,
+                               panel_class == "Candidate-High" ~ 8,
+                               panel_class == "Candidate-refutedDxGene" ~ 7,
+                               panel_class == "Candidate" ~ 6,
+                               panel_class == "Dx-modifier-rare" ~ 3,
+                               panel_class == "Dx-modifier-common" ~ 2,
                                TRUE ~ 0)) %>% 
     arrange(desc(eyeGene), desc(ACMG_class)) %>% 
     select(AnnotSV_ID:Annotation_mode,OMIM_phenotype:ACMG_class,panel_class,CohortFreq,`NaltP/NtotalP`,note,everything() ) 
@@ -329,7 +405,8 @@ if (scramble_del_file == "filePlaceholder") {
 if ( clinsv_file == "filePlaceholder") {
   clinsv <- data.frame("sample" = sampleName, "note" = "clinSV not analyzed.")
 } else {
-  clinsv <- read_xlsx(clinsv_file, sheet = "clinSV", na = c("NA", "", "None", "NONE", "."))
+  clinsv <- read_xlsx(clinsv_file, sheet = "clinSV", na = c("NA", "", "None", "NONE", ".")) %>% 
+    filter(VariantID != "ID") #temporary fix for extra column name line, to be updated/edited
 }
 
 gemini_filtered1 <- gemini_filtered %>% filter(priority_score >= 3) %>% select(-maxpriorityscore) %>% 
@@ -394,7 +471,7 @@ summaryInfo <- data.frame("sample" = sampleName, "PatientDxPhenotype" = NA, "DxO
 #scramble_del_file == "filePlaceholder", genome as scramble_del is not run for genome.
 #is.an(convading_file), exome 
 if (scramble_del_file == "filePlaceholder") {
-  openxlsx::write.xlsx(list("AR" = ar, "AD" = ad, "XR" = xR, "XD" = xD, "ACMG" = acmg, "all" = gemini_filtered1, "rareRef" = gemini_ref_var_rearrangeCol, "clinSV" = clinsv, "manta" = manta_sort, "scramble_mei" = scramble_mei, "roh" = roh, "config" = config, "summary" = summaryInfo), file = gemini_xlsx_file, firstRow = TRUE, firstCol = TRUE, keepNA = FALSE)
+  openxlsx::write.xlsx(list("AR" = ar, "AD" = ad, "XR" = xR, "XD" = xD, "ACMG" = acmg, "all" = gemini_filtered1, "rareRef" = gemini_ref_var_rearrangeCol, "clinSV" = clinsv, "manta" = manta_sort, "jaxCNV" = jaxcnv_sort, "scramble_mei" = scramble_mei, "roh" = roh, "config" = config, "summary" = summaryInfo), file = gemini_xlsx_file, firstRow = TRUE, firstCol = TRUE, keepNA = FALSE)
 } else if (is.na(convading_file)) {
   openxlsx::write.xlsx(list("AR" = ar, "AD" = ad, "XR" = xR, "XD" = xD, "ACMG" = acmg, "all" = gemini_filtered1, "rareRef" = gemini_ref_var_rearrangeCol, "manta" = manta_sort, "scramble_mei" = scramble_mei, "scramble_del" = scramble_del_sort, "roh" = roh, "config" = config, "summary" = summaryInfo), file = gemini_xlsx_file, firstRow = TRUE, firstCol = TRUE, keepNA = FALSE)
 } else {

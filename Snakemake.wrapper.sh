@@ -9,7 +9,8 @@
 # $2 - --notemp --dryrun --unlock --rerun-triggers mtime
 # $3 non-default json file # currently not used
 
-module load snakemake/7.19.1 || exit 1
+module load $(grep "^snakemake_version:" $1 | head -n 1 | cut -d"'" -f 2) || exit 1
+#snakemake/7.19.1 1/3/2025 updated this to config_generic.yaml
 #7.19.1 works with InterVar, but does not work with crossmap/0.6.5 if region has ","
 #7.7.0 does not have --rerun-triggers mtime option.
 #previous version 5.24.1, intervar/2.1.3 does not work with snakemake/6.0.5 version.
