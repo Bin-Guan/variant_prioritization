@@ -16,12 +16,12 @@ library(tidyverse)
 ##is.na(priority_score)
 
 args <- commandArgs(trailingOnly=TRUE)
-##When testing, use the line below.
-# setwd("W:/annotation/kp/temp")
-# args <- c("Axiom_PMDRAv2.na36.r2.a2__24chr.for.ps.tsv", "squirls.Axiom_PMDRAv2.na36.r2.a2__24chr.csv",
-#           "pangolin.Axiom_PMDRAv2.na36.r2.a2__24chr.tsv", "crossmap.hg19.Axiom_PMDRAv2.na36.r2.a2__24chr.tsv",
+#When testing, use the line below.
+# setwd("Z:/projects/panel/prioritization/temp")
+# args <- c("NR6A1_nisc__24chr.for.ps.tsv", "squirls.NR6A1_nisc__24chr.csv",
+#           "pangolin.NR6A1_nisc__24chr.tsv", "crossmap.hg19.NR6A1_nisc__24chr.tsv",
 #           "Z:/resources/gnomad/release-2.1.1/gnomad.v2.1.1.lof_metrics.by_gene.txt",
-#           "Axiom_PMDRAv2.na36.r2.a2__24chr.ps.tsv")
+#           "NR6A1_nisc__24chr.ps.tsv")
 
 psInput_file <- args[1]
 squirls_file <- args[2]
@@ -34,7 +34,9 @@ input_df <- read_tsv(psInput_file, col_names = TRUE, na = c("NA", "", "None", "N
   type_convert() %>% 
   mutate(CHROM = as.factor(CHROM)) %>% 
   mutate(across(where(is.character), ~na_if(., "1"))) %>% #bcftools query outputted "1" for blank for character column.
-  type_convert()
+  type_convert() %>% 
+  unite("variantkey", CHROM, POS, REF, ALT, sep = "-", remove = FALSE) 
+  
 
 gnomad_metrics <- read_tsv(gnomad_metrics_file, col_names = TRUE, na = c("NA", "", "None", "NONE", "."), col_types = cols(.default = col_character())) %>%
   type_convert() %>%
@@ -45,7 +47,7 @@ input_df <- left_join(input_df, gnomad_metrics, by = "Ref_Gene")
 
 squirls_annotation <-  read_csv(squirls_file,  col_names = TRUE, na = c("NA", "", "None", "NONE", ".", "NaN"), col_types = "ficccdc") %>%
   rename(squirls_interpretation = INTERPRETATION, squirls_maxscore = MAX_SCORE, squirls_score = SCORES) %>%
-  unite("variantkey", CHROM:ALT, sep = "-", remove = FALSE) %>% 
+  unite("variantkey", CHROM:ALT, sep = "-", remove = TRUE) %>% 
   group_by(variantkey) %>%
   replace_na(list(squirls_maxscore = 0)) %>%
   slice(which.max(squirls_maxscore)) %>% 
@@ -67,8 +69,7 @@ pangolin <- read_tsv(pangolin_file, col_names = TRUE, na = c("NA", "", "None", "
   ungroup(variantkey) %>% 
   select(-Pangolin, -starts_with("temp_")) 
 
-squirls_pangolin_annotation <- left_join(squirls_annotation, pangolin, by = "variantkey") %>% 
-  select(-variantkey)
+squirls_pangolin_annotation <- left_join(pangolin, squirls_annotation, by = "variantkey") 
 
 pickMaxScore <- function(x, y){
   x = as.character(x)
@@ -90,14 +91,16 @@ crossmap <- read_tsv(crossmap_file, col_names = TRUE, na = c("NA", "", "None", "
   type_convert() %>% 
   unite("grch37variant_id", CHROM, POS, REF, ALT, sep = "-")
 
-ps_df_crossmap <- left_join(input_df, crossmap, by = "ID")
+ps_df_crossmap <- left_join(input_df, crossmap, by = "ID") 
+  
 
 rm(input_df)
 rm(crossmap)
 
 ##The following line was meant to add 3 to Priority_Score when CSQ fields has truncating and PVS1 == 0 and pmaxaf < 0.01 & Priority_Score_intervar < 6
 ##Empty fields showed as "" for character columns after separate(). Possibly use mutate(across(where(is.character), ~na_if(., "")))
-ps_df <-  left_join(ps_df_crossmap, squirls_pangolin_annotation, by=c('CHROM', 'POS', 'REF', 'ALT')) %>%
+ps_df <-  left_join(ps_df_crossmap, squirls_pangolin_annotation, by="variantkey") %>%
+  select(-variantkey) %>% 
   mutate(truncating_vep = ifelse(grepl("frameshift_variant|splice_acceptor_variant|splice_donor_variant|start_lost|stop_gained|stop_lost", CSQ, ignore.case = TRUE), 1, 0)) %>% 
   mutate(temp_CSQ = CSQ) %>% 
   separate_rows(temp_CSQ, sep = "\\,") %>%
@@ -114,7 +117,7 @@ ps_df <-  left_join(ps_df_crossmap, squirls_pangolin_annotation, by=c('CHROM', '
            ifelse(grepl("damaging", polyphen), 0.5, 0) +
            ifelse(is.na(cadd_phred), 0, ifelse(cadd_phred > 15, 0.5, 0) ) +
            temp_genesplicer + temp_maxentscan_diff +
-           ifelse(five_prime_utr_variant_consequence == "" | max_af > 0.001, 0, 1) +
+           ifelse(is.na(five_prime_utr_variant_consequence) | max_af > 0.001, 0, 1) +
            ifelse(am_class == "likely_pathogenic", 0.5, 0) ) %>% 
   group_by(ID) %>% slice(which.max(temp_csq_score)) %>% ungroup() %>% 
   mutate(gno2x_expected_an = case_when(CHROM %in% c("X", "chrX") & gno2x_nonpar == "1" ~ 183653,
@@ -167,19 +170,21 @@ ps_df <-  left_join(ps_df_crossmap, squirls_pangolin_annotation, by=c('CHROM', '
            ifelse(is.na(hmc_score), 0, ifelse(hmc_score < 0.8, 0.5, 0)) +
            ifelse(is.na(gnomad_nc_constraint), 0, ifelse(gnomad_nc_constraint > 4 & pmaxaf < 0.01, 0.5, 0)) +
            ifelse(am_class == "likely_pathogenic", 0.5, 0)) %>% 
-  replace_na(list(clinvar_hgmd_score=0, insilico_score=0, mis_z=0, SigmaAF_Missense_0001=0,
-                  spliceai_rank=0)) %>% 
-  mutate(temp_dpsi_max_tissue = dpsi_max_tissue) %>% 
-  mutate(temp_dpsi_zscore = dpsi_zscore) %>%
+  replace_na(list(clinvar_hgmd_score=0, insilico_score=0, SigmaAF_Missense_0001=0,
+                  spliceai_rank=0, pangolin_max=0)) %>% 
+  mutate(temp_mis_z = mis_z, temp_dpsi_max_tissue = dpsi_max_tissue, temp_dpsi_zscore = dpsi_zscore) %>% 
+  mutate(temp_squirls_maxscore = squirls_maxscore) %>%
   mutate(temp_dbscsnv_ada_score = dbscSNV_ADA_SCORE) %>% 
   mutate(temp_dbscsnv_rf_score = dbscSNV_RF_SCORE) %>% 
-  replace_na(list(temp_dpsi_max_tissue = 0, temp_dpsi_zscore = 0, temp_dbscsnv_ada_score = 0, temp_dbscsnv_rf_score = 0 )) %>%
+  replace_na(list(temp_mis_z = 0, temp_dpsi_max_tissue = 0, temp_dpsi_zscore = 0, 
+                  temp_dbscsnv_ada_score = 0, temp_dbscsnv_rf_score = 0,
+                  temp_squirls_maxscore = 0)) %>%
   mutate(temp_dpsi_score = case_when(pmaxaf < 0.02 & abs(temp_dpsi_max_tissue + temp_dpsi_zscore) > 10 ~ 3,
                                      pmaxaf < 0.02 & abs(temp_dpsi_max_tissue + temp_dpsi_zscore) > 5 ~ 1,
                                      TRUE ~ 0)) %>%
   mutate(temp_dbscSNV_score = ifelse((pmaxaf < 0.02 & temp_dbscsnv_ada_score>0.8 & temp_dbscsnv_rf_score>0.5), 3, 0)) %>% 
-  mutate(temp_squirl_score = case_when(squirls_interpretation == "pathogenic" & squirls_maxscore > 0.8 ~ 3, #according to squirls paper Fig. S4.
-                                       squirls_interpretation == "pathogenic" & squirls_maxscore > 0.2 ~ 0.5,
+  mutate(temp_squirl_score = case_when(squirls_interpretation == "pathogenic" & temp_squirls_maxscore > 0.8 ~ 3, #according to squirls paper Fig. S4.
+                                       squirls_interpretation == "pathogenic" & temp_squirls_maxscore > 0.2 ~ 0.5,
                                        TRUE ~ 0)) %>%
   mutate(temp_pangolin_score = case_when( pangolin_max > 0.5 ~ 6,
                                           pangolin_max > 0.2 ~ 3,
@@ -190,9 +195,9 @@ ps_df <-  left_join(ps_df_crossmap, squirls_pangolin_annotation, by=c('CHROM', '
            ifelse(PVS1 == 1 | pmaxaf >= 0.005 | PrScore_intervar > 6 | splice_score > 2, 0, truncating_vep*3) +
            pmin(8, ifelse(PVS1 == 1 | pmaxaf >= 0.03, 0, splice_score) + ifelse(pmaxaf >= 0.02, 0, pmin(6, insilico_score)) )) %>% 
   mutate(other_modification = ifelse(grepl("protein_altering_variant|inframe", CSQ, ignore.case = TRUE) & pmaxaf < 0.01 & PrScore_intervar < 5 & insilico_score < 3, 3, 0) +
-           ifelse(grepl("missense_variant", CSQ, ignore.case = TRUE) & mis_z >= 3.09 & SigmaAF_Missense_0001 < 0.005 & pmaxaf < 0.005 & insilico_score < 4, 2, 0) +
+           ifelse(grepl("missense_variant", CSQ, ignore.case = TRUE) & temp_mis_z >= 3.09 & SigmaAF_Missense_0001 < 0.005 & pmaxaf < 0.005 & insilico_score < 4, 2, 0) +
            ifelse(grepl("upstream|downstream|UTR", Func_refGeneWithVer) & pmaxaf < 0.005, 0.5, 0) +
-           ifelse(five_prime_utr_variant_consequence == "" | pmaxaf > 0.001, 0, 1) +
+           ifelse(is.na(five_prime_utr_variant_consequence) | pmaxaf > 0.001, 0, 1) +
            ifelse(is.na(regsnp_disease) | regsnp_disease == "B" | pmaxaf > 0.001, 0, ifelse(regsnp_disease == "D", 1, 0.5)) +
            ifelse(grepl("0,255,0|255,0,0", atac_rpe_itemRgb) & pmaxaf < 0.001 & priority_score < 5, 1, 0) + 
            ifelse(is.na(ft_ret_rpe_score), 0, ifelse(pmaxaf < 0.001 & priority_score < 5, 0.5, 0)) +
