@@ -249,7 +249,7 @@ manta_freq <- read_tsv(manta_freq_file, col_names = TRUE, na = c("NA", "full=NA"
 if ( !file.exists(manta_file)) {
   manta_sort <- data.frame("sample" = sampleName, "note" = "No manta calling")
 } else if (file.size(manta_file) == 0) {
-  manta_sort <- data.frame("sample" = sampleName, "note" = "Empty manta")
+  manta_sort <- data.frame("sample" = sampleName, "note" = "manta empty or not performed")
 } else {
   manta_original <- read_tsv(manta_file, col_names = TRUE, na = c("NA", "full=NA", "", "None", "NONE", "."), col_types = cols(.default = col_character())) %>%
     filter(FILTER == 'PASS') %>% 
@@ -359,7 +359,7 @@ if ( roh_file == "filePlaceholder") {
 if ( scramble_mei_file == "filePlaceholder") {
   scramble_mei <- data.frame("sample" = sampleName, "note" = "Scramble mei not analyzed.")
 } else if (file.size(scramble_mei_file) == 0) {
-  scramble_mei <- data.frame("sample" = sampleName, "note" = "Empty scramble mei")
+  scramble_mei <- data.frame("sample" = sampleName, "note" = "Empty scramble mei or not performed")
 } else {
   scramble_mei <- read_xlsx(scramble_mei_file, na = c("NA", "", "None", "NONE", "."))
 }
@@ -402,8 +402,11 @@ if (scramble_del_file == "filePlaceholder") {
 
 #manta_file "Z:/NextSeqAnalysis/test2/manta/manta.1197.annotated.tsv"
 ##Add clinSV for genome, the position is "filePlaceholder" for other analysis type.
+
 if ( clinsv_file == "filePlaceholder") {
-  clinsv <- data.frame("sample" = sampleName, "note" = "clinSV not analyzed.")
+  clinsv <- data.frame("sample" = sampleName, "note" = "ClinSV not analyzed.")
+} else if (file.size(clinsv_file) == 0) {
+  clinsv <- data.frame("sample" = sampleName, "note" = "Empty clinsv or not performed")
 } else {
   clinsv <- read_xlsx(clinsv_file, sheet = "clinSV", na = c("NA", "", "None", "NONE", ".")) %>% 
     filter(VariantID != "ID") #temporary fix for extra column name line, to be updated/edited
