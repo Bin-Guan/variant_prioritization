@@ -20,7 +20,7 @@ gemini_lenient: 'Yes'
 pick: 'canonical' #pick, canonical, or all. See snake file for description
 LAFplot: 'FALSE' #TRUE if panel after production. If TRUE then chromosome LesserAlleleFreq plot will be generated. Any other value equals to FALSE
 snakemake_version: 'snakemake/7.32.4' #updated 1/3/2025 from 7.19.1
-samtools_version: 'samtools/1.17' #previous version 1.13 is still available, can go back if needed.
+samtools_version: 'samtools/1.21' #previous version 1.13 is still available, can go back if needed.
 ref_genome: '' #hard-coded in snakemake file
 VEP_version: 'VEP/107' #previous version 103, VEP/109 had error message
 vcfanno_version: 'vcfanno/0.3.3'
@@ -40,7 +40,7 @@ annovar_clinvar_version: 'clinvar_20220320' #clinv is downloaded every run
 pangolin-splice_version: 'pangolin-splice/1.0.1'
 OGLexome_version: '/data/OGL/resources/OGLsample/OGL.exome.gl.fb.v2.2022-09.vcf.gz'
 OGLgenome_version: '/data/OGL/resources/OGLsample/OGL.genome.gl.fb.v2.index.2022-09.vcf.gz'
-ACMG_SF: 'v3.1'
+ACMG_SF: 'v3.2'
 manta_freq: '/data/OGL/resources/manta/manta.OGL.freq.2022-09.tsv' #make it an excel file with two sheets if using scramble-like db file
 jaxcnv_freq: '/data/OGL/resources/jaxCNV/jaxCNV.OGL.freq.2025-01.tsv'
 mastermind_vcf: '/data/OGL/resources/mastermind/mastermind_cited_variants_reference-2022.10.02-grch38.vcf.gz'

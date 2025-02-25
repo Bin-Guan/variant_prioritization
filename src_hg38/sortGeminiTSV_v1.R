@@ -13,6 +13,7 @@
 
 args <- commandArgs(trailingOnly=TRUE)
 
+# setwd("Z:/genome/RodYoung/prioritization")
 # args <- c("gemini_tsv/RY1.ChileMAC.chileanMAC.gemini.tsv",
 #           "gemini_tsv/RY1.ChileMAC.chileanMAC.gemini.ref.tsv",
 #           "Z:/resources/OGLpanelGeneDxORcandidate.xlsx",
@@ -403,14 +404,6 @@ if (scramble_del_file == "filePlaceholder") {
 #manta_file "Z:/NextSeqAnalysis/test2/manta/manta.1197.annotated.tsv"
 ##Add clinSV for genome, the position is "filePlaceholder" for other analysis type.
 
-if ( clinsv_file == "filePlaceholder") {
-  clinsv <- data.frame("sample" = sampleName, "note" = "ClinSV not analyzed.")
-} else if (file.size(clinsv_file) == 0) {
-  clinsv <- data.frame("sample" = sampleName, "note" = "Empty clinsv or not performed")
-} else {
-  clinsv <- read_xlsx(clinsv_file, sheet = "clinSV", na = c("NA", "", "None", "NONE", ".")) %>% 
-    filter(VariantID != "ID") #temporary fix for extra column name line, to be updated/edited
-}
 
 gemini_filtered1 <- gemini_filtered %>% filter(priority_score >= 3) %>% select(-maxpriorityscore) %>% 
   arrange(desc(eyeGene), desc(priority_score))
@@ -426,10 +419,64 @@ recessive_count <- select(gemini_filtered2, c(temp_ref_gene, priority_score, gt_
   filter(priority_score >= 5) %>% select(-priority_score) %>% 
   group_by(temp_ref_gene) %>% summarize(recessive_cnt = sum(gt_types)) 
 
+eyeGeneList <- read_xlsx(geneCategory_file, sheet = "analysis", na = c("NA", "", "None", ".")) %>% 
+  select(gene) %>% distinct() %>% 
+  pull(gene)
+acmg_genes <- read_xlsx(geneCategory_file, sheet = "ACMG", na = c("NA", "", "None", "NONE", ".")) %>% pull(Gene) %>% unique()
+acmg_ARgenes <- read_xlsx(geneCategory_file, sheet = "ACMG", na = c("NA", "", "None", "NONE", ".")) %>% 
+  filter(Inheritance == "AR") %>% pull(Gene) %>% unique()
+
+selectGene <- function(x, y){
+  x = as.character(x)
+  geneNames <- as.list(strsplit(x, ","))[[1]] 
+  if (length(geneNames) > 0) {
+    eyeGene <- purrr::keep(geneNames, geneNames %in% y) 
+    if (length(eyeGene) == 0) {
+      return(NA)
+    } else if (length(eyeGene) == 1) { return(eyeGene) }
+    else { return(paste(eyeGene, collapse = ",")) }
+  } else {
+    return(NA)
+  }
+}
+
+#clinSV cds gene added to reccessive_count
+if ( clinsv_file == "filePlaceholder") {
+  clinsv <- data.frame("sample" = sampleName, "note" = "ClinSV not analyzed.")
+} else if (file.size(clinsv_file) == 0) {
+  clinsv <- data.frame("sample" = sampleName, "note" = "Empty clinsv or not performed")
+} else {
+  clinsv <- read_xlsx(clinsv_file, sheet = "clinSV", na = c("NA", "", "None", "NONE", ".")) %>% 
+    filter(is.na(VariantID) | VariantID != "ID") #temporary fix for extra column name line, to be updated/edited
+  clinsv$ACMG2nd <- sapply(1:nrow(clinsv), function(x) {selectGene(clinsv[x, "Genes"], acmg_genes)})
+  clinsv$eyeGene <- sapply(1:nrow(clinsv), function(x) {selectGene(clinsv[x, "Genes"], eyeGeneList)})
+  clinsv <- select(clinsv, Sample:SEGD, eyeGene, ACMG2nd, everything()) %>% 
+    arrange(eyeGene, ACMG2nd)
+  clinsv_cds <- filter(clinsv, SVtype == "BND" | GeneFeature != "intron") %>% 
+    select(Genes, GT) %>% separate_rows(Genes, sep=",") %>% unique() %>% 
+    separate(GT, c("GT1", "GT2"), sep = "\\/", convert = TRUE) %>% 
+    mutate(clinsvGT = GT1 + GT2) %>% 
+    select(Genes, clinsvGT)
+  clinsv_cds_geneList = select(clinsv_cds, Genes) %>% pull(Genes)
+  recessive_count <- left_join(recessive_count, clinsv_cds, by = c("temp_ref_gene" = "Genes")) %>% 
+    replace_na(list(clinsvGT = 0)) %>% 
+    mutate(recessive_cnt = recessive_cnt + clinsvGT) %>% 
+    select(temp_ref_gene, recessive_cnt)
+  gemini_filtered2 <- gemini_filtered2 %>% 
+    mutate(note = ifelse(temp_ref_gene %in% clinsv_cds_geneList, ifelse(note == "", "clinSV", paste0(note, "; clinSV")), note))
+}
+
 gemini_filtered3 <- left_join(gemini_filtered2, recessive_count, by=c("temp_ref_gene")) %>% 
   replace_na(list(recessive_cnt=0)) %>% 
   mutate(recessive_cnt = as.integer(recessive_cnt)) %>% 
   select(-temp_ref_gene)
+
+acmg <- gemini_filtered3 %>% filter(ref_gene %in% acmg_genes, priority_score > 4) %>%
+  filter(ref_gene != "HFE" | (chr_variant_id == "chr6-26092913-G-A" & recessive_cnt > 1) ) %>% 
+  filter(recessive_cnt > 1 | !ref_gene %in% acmg_ARgenes) %>% 
+  select(-maxpriorityscore, -recessive_cnt)
+ 
+print("###acmg done### 70%")
 
 xR <- gemini_filtered3 %>% filter(chrom %in% c("X", "chrX"), priority_score >= 5, recessive_cnt >= 2) %>% select(-maxpriorityscore, -recessive_cnt)
 xD <- gemini_filtered3 %>% filter(chrom %in% c("X", "chrX"), recessive_cnt == 1, pmaxaf < 0.002) %>% select(-maxpriorityscore, -recessive_cnt)
@@ -439,7 +486,8 @@ xD <- gemini_filtered3 %>% filter(chrom %in% c("X", "chrX"), recessive_cnt == 1,
 ar <- gemini_filtered3 %>% filter(!chrom %in% c("X", "Y", "chrX", "chrY"), !omim_inheritance %in% c("AD"), priority_score >= 5, recessive_cnt >= 2) %>% 
   mutate(knownAR = ifelse(grepl("AR", omim_inheritance), 1, 0)) %>% 
   arrange(desc(eyeGene), desc(knownAR), desc(maxpriorityscore), ref_gene, desc(priority_score)) %>% 
-  mutate(note = ifelse(ref_gene %in% c("PRPH2", "ROM1", "PCDH15", "CDH23", "CNGA1", "CNGB1", "CNGA3", "CNGB3"), "Digenic?", note) ) %>%
+  mutate(note = ifelse(ref_gene %in% c("PRPH2", "ROM1", "PCDH15", "CDH23", "CNGA1", "CNGB1", "CNGA3", "CNGB3"), 
+                      ifelse(note == "", "Digenic?", paste0(note, "; Digenic?")), note) ) %>%
   select(-maxpriorityscore, -knownAR, -recessive_cnt) # digenic recessive
 
 #ad are those omim unknown or AD inheritance. 
@@ -453,17 +501,6 @@ print("###inheritance search done### 50%")
 
 #AD: score > 4 , AR: score > 4, all: score >= 3
 
-acmg_genes <- read_xlsx(geneCategory_file, sheet = "ACMG", na = c("NA", "", "None", "NONE", ".")) %>% pull(Gene) %>% unique()
-
-# acmg_genes = c('ACTA2','ACTC1','APC','APOB','ATP7B','BMPR1A','BRCA1','BRCA2',
-#                'CACNA1S','COL3A1','DSC2','DSG2','DSP','FBN1','GLA','KCNH2','KCNQ1',
-#                'LDLR','LMNA','MEN1','MLH1','MSH2','MSH6','MUTYH','MYBPC3','MYH11',
-#                'MYH7','MYL2','MYL3','NF2','OTC','PALB2','PCSK9','PKP2','PMS2','PRKAG2',
-#                'PTEN','RB1','RET','RYR1','RYR2','SCN5A','SDHAF2','SDHB','SDHC',
-#                'SDHD','SMAD3','SMAD4','STK11','TGFBR1','TGFBR2','TMEM43','TNNI3',
-#                'TNNT2','TP53','TPM1','TSC1','TSC2','VHL','WT1')
-acmg <- gemini_filtered3 %>% filter(ref_gene %in% acmg_genes, priority_score > 4) %>% select(-maxpriorityscore, -recessive_cnt)
-print("###acmg done### 70%")
 
 config <- read_tsv(config_file, col_names = FALSE, na = c("NA", ""), col_types = cols(.default = col_character())) %>% 
   separate("X1", c("tool", "version", "note"), sep = "\\:|\\#", remove = TRUE)

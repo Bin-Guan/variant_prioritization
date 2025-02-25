@@ -53,8 +53,8 @@ snakemake -s $snakefile \
 # --unlock
 
 WORK_DIR=$PWD
-echo "variant_prioritization.git.version.in.OGL_resources: '$(tail -n 1 /data/OGL/resources/variant_prioritization.git.log)'" >> $1
-echo "variant_prioritization.git.version.in.OGL_resources.date: '$(cat /data/OGL/resources/variant_prioritization.git.log | head -n 3 | tail -n 1 | sed s/"^Date:   "//)'" >> $1
+echo "variant_prioritization.git.in.OGL_resources: '$(head -n 1 /data/OGL/resources/variant_prioritization.git.log)'" >> $1
+echo "variant_prioritization.git.in.OGL_resources.date: '$(cat /data/OGL/resources/variant_prioritization.git.log | head -n 3 | tail -n 1 | sed s/"^Date:   "//)'" >> $1
 cd ~/git/variant_prioritization
 git log | head -n 5 > $WORK_DIR/variant_prioritization.git.log
 cd $WORK_DIR

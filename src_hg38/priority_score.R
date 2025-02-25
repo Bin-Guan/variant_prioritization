@@ -74,7 +74,7 @@ squirls_pangolin_annotation <- left_join(pangolin, squirls_annotation, by = "var
 pickMaxScore <- function(x, y){
   x = as.character(x)
   scores <- as.list(strsplit(x, ";"))[[1]] 
-  if (length(scores) > 1) {
+  if (length(scores) > 0) {
     maxscore <- purrr::keep(scores, grepl(format(round(y, 6), nsmall = 6), scores)) 
     if (length(maxscore) == 0) {
       return(x)
@@ -134,13 +134,17 @@ ps_df <-  left_join(ps_df_crossmap, squirls_pangolin_annotation, by="variantkey"
                             !is.na(gno2x_filter) & !is.na(gno3_filter) ~ pmax(esp6500siv2_all,f1000g2015aug_all, na.rm = TRUE),
                             TRUE ~ pmax(gno2x_af_all, gno3_af_all, gno2x_af_popmax, gno3_maxaf, max_af, na.rm = TRUE))) %>% 
   replace_na(list(pmaxaf=0)) %>% 
-  unite("temp_clinvar", CLNSIG, clin_sig, sep = "-", remove = FALSE ) %>% 
-  mutate(temp_clinvar = gsub("_interpretations_of_pathogenicity", "", temp_clinvar)) %>% 
+  #unite("temp_clinvar", CLNSIG, clin_sig, sep = "-", remove = FALSE ) %>% 
+  #mutate(temp_clinvar = gsub("_of_pathogenicity", "", temp_clinvar)) %>% 
   mutate(temp_existing_variant = gsub("rs\\d+", "", existing_variation)) %>% 
   mutate(temp_existing_variant = gsub("COS\\w\\d+", "", temp_existing_variant)) %>% #VEP100: COSV, #VEP99: COSM
   mutate(temp_existing_variant = gsub("\\w+_\\w+", "", temp_existing_variant)) %>%
-  mutate(temp_clinvar_score = ifelse(grepl("pathogenic", temp_clinvar, ignore.case = TRUE), 6, 0) - 
-           ifelse(grepl("benign", temp_clinvar, ignore.case = TRUE) & grepl("pathogenic", temp_clinvar, ignore.case = TRUE), 3, 0) ) %>%
+  mutate(temp_clinvar_score = case_when( !grepl("Conflicting_", CLNSIG, ignore.case = TRUE) & grepl("pathogenic", CLNSIG, ignore.case = TRUE) ~ 6,
+                                         !grepl("Conflicting_", CLNSIG, ignore.case = TRUE) & grepl("risk|Uncertain", CLNSIG, ignore.case = TRUE) ~ 1,
+                                         !grepl("Conflicting_", CLNSIG, ignore.case = TRUE) & grepl("benign", CLNSIG, ignore.case = TRUE) & pmaxaf > 0.02 ~ -1,
+                                         grepl("Conflicting_", CLNSIG, ignore.case = TRUE) & grepl("pathogenic", CLNSIGCONF, ignore.case = TRUE) ~ 3,
+                                         grepl("Conflicting_", CLNSIG, ignore.case = TRUE) & grepl("Uncertain|risk", CLNSIGCONF, ignore.case = TRUE) ~ 1,
+                                         TRUE ~ 0 )) %>%
   mutate(temp_hgmd_score = case_when( hgmd_class == "DM" ~ 3,
                                       grepl("[A-Z]", temp_existing_variant) | !is.na(HGMD_Overlap4aa) & pmaxaf < 0.005 ~ 1,
                                       hgmd_class == "DM\\?" ~ 0.5, 
