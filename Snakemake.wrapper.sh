@@ -9,6 +9,7 @@
 # $2 - --notemp --dryrun --unlock --rerun-triggers mtime
 # $3 non-default json file # currently not used
 
+set -e
 module load $(grep "^snakemake_version:" $1 | head -n 1 | cut -d"'" -f 2) || exit 1
 #snakemake/7.19.1 1/3/2025 updated this to config_generic.yaml
 #7.19.1 works with InterVar, but does not work with crossmap/0.6.5 if region has ","
