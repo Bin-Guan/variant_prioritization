@@ -193,6 +193,35 @@ else:
 	# localrules: priority_scores
 
 #localrules: VEP_annotate panel above.
+localrules: intervar_evidence_omim
+rule intervar_evidence_omim:
+	input:
+		vcf = config['input_vcf']
+	output:
+		evidenceInput = temp('temp/evidence.input'),
+		InterVarEvidence = temp('temp/InterVarEvidence.txt'),
+		omim = temp('temp/omim.vcfanno.file.done'),
+		clinvar = temp('temp/clinvar.file.done')
+	shell:
+		"""
+		if [[ $(module list 2>&1 | grep "R/" | wc -l) < 1 ]]; then module load {config[R_version]}; fi
+		# module load {config[samtools_version]}
+		if [[ $(module list 2>&1 | grep "annovar" | wc -l) < 1 ]]; then module load {config[annovar_version]}; fi
+		Rscript /home/$USER/git/variant_prioritization/src_hg38/intervar_evidence.R /data/OGL/resources/OGLvariantsClassification_hg38.xlsx {output.evidenceInput}
+		# bcftools norm --check-ref s --fasta-ref {config[ref_genome]} --output-type v evidence.input  # needs true vcf style file for normalizaiton.
+		convert2annovar.pl -format vcf4old {output.evidenceInput} -includeinfo | cut -f 1,2,4,5,8,13 > {output.InterVarEvidence}
+		projectdir=$PWD
+		cd /data/OGL/resources/omim/
+		bash buildOMIM1.sh
+		cd /data/OGL/resources/clinvar
+		bash download.clinvar.sh
+		cd $projectdir
+		echo "ClinVar_vcf: '$(zcat /data/OGL/resources/clinvar/clinvar.vcf.gz | head -n 2 | tail -n 1 | sed s/##// )'"  \
+			>> $(grep "configuration_file:" {config[configuration_file]} | cut -d"'" -f 2)
+		touch {output.omim}
+		touch
+		"""
+
 rule n_split_vcf:
 	input:
 		vcf = config['input_vcf']
@@ -248,7 +277,8 @@ else:
 	rule bcftools_norm:
 		input:
 			vcf = 'temp/{sample}__{region}.vcf.gz',
-			index = 'temp/{sample}__{region}.vcf.gz.tbi'
+			index = 'temp/{sample}__{region}.vcf.gz.tbi',
+			clinvar = 'temp/clinvar.file.done'
 		output:
 			bcf = temp('temp/vt.{sample}__{region}.bcf'),
 			vcf = temp('temp/vt.{sample}__{region}.vcf.gz'),
@@ -285,32 +315,7 @@ else:
 # freebayes vcf fixed by vt immediately after freebayes.
 # vt normalize did not work as well as bcftools norm, which keeps all formats fields and properly decompose AF and AQ in the INFO field.
 
-localrules: intervar_evidence_omim
-rule intervar_evidence_omim:
-	input:
-		vcf = config['input_vcf']
-	output:
-		evidenceInput = temp('temp/evidence.input'),
-		InterVarEvidence = temp('temp/InterVarEvidence.txt'),
-		omim = temp('temp/omim.vcfanno.file.done')
-	shell:
-		"""
-		if [[ $(module list 2>&1 | grep "R/" | wc -l) < 1 ]]; then module load {config[R_version]}; fi
-		# module load {config[samtools_version]}
-		if [[ $(module list 2>&1 | grep "annovar" | wc -l) < 1 ]]; then module load {config[annovar_version]}; fi
-		Rscript /home/$USER/git/variant_prioritization/src_hg38/intervar_evidence.R /data/OGL/resources/OGLvariantsClassification_hg38.xlsx {output.evidenceInput}
-		# bcftools norm --check-ref s --fasta-ref {config[ref_genome]} --output-type v evidence.input  # needs true vcf style file for normalizaiton.
-		convert2annovar.pl -format vcf4old {output.evidenceInput} -includeinfo | cut -f 1,2,4,5,8,13 > {output.InterVarEvidence}
-		projectdir=$PWD
-		cd /data/OGL/resources/omim/
-		bash buildOMIM1.sh
-		cd /data/OGL/resources/clinvar
-		bash download.clinvar.sh
-		cd $projectdir
-		echo "ClinVar_vcf: '$(zcat /data/OGL/resources/clinvar/clinvar.vcf.gz | head -n 2 | tail -n 1 | sed s/##// )'"  \
-			>> $(grep "configuration_file:" {config[configuration_file]} | cut -d"'" -f 2)
-		touch {output.omim}
-		"""
+
 #if threads 8 then requires 32G memory.
 if config['datatype'].upper() in ["PANEL"]:
 	localrules: annovar_intervar
