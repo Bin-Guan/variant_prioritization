@@ -219,7 +219,7 @@ rule intervar_evidence_omim:
 		echo "ClinVar_vcf: '$(zcat /data/OGL/resources/clinvar/clinvar.vcf.gz | head -n 2 | tail -n 1 | sed s/##// )'"  \
 			>> $(grep "configuration_file:" {config[configuration_file]} | cut -d"'" -f 2)
 		touch {output.omim}
-		touch
+		touch {output.clinvar}
 		"""
 
 rule n_split_vcf:
@@ -257,7 +257,8 @@ if config['gatk3'] == 'TRUE':
 	rule vt_bgzip_and_tabix_vcf:
 		input:
 			vcf = 'temp/{sample}__{region}.vcf.gz',
-			index = 'temp/{sample}__{region}.vcf.gz.tbi'
+			index = 'temp/{sample}__{region}.vcf.gz.tbi',
+			clinvar = 'temp/clinvar.file.done'
 		output:
 			vcf = temp('temp/vt.{sample}__{region}.vcf.gz'),
 			index = temp('temp/vt.{sample}__{region}.vcf.gz.tbi')
