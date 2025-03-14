@@ -134,10 +134,10 @@ annovar_inter <- merge(x = annovarS, y = intervar_for_sorting,
  # mutate(popmax_gnomad3f = pmax(gnomAD_genome_AMI, gnomAD_genome_ASJ, gnomAD_genome_FIN, gnomAD_genome_MID, gnomAD_genome_OTH, na.rm = TRUE)) %>%
   #mutate(popmax_exome = pmax(gnomAD_exome_ALL, gnomAD_exome_AFR, gnomAD_exome_AMR, gnomAD_exome_EAS, gnomAD_exome_NFE, gnomAD_exome_SAS, na.rm = TRUE ) ) %>%
   mutate(maxaf_annovar =  pmax(maxaf_intervar, popmax_gnomad3e, na.rm = TRUE)) %>%
-  mutate(truncating = case_when(PVS1 == 0 & grepl("^frameshift|stop|start", ExonicFunc.ensGene, ignore.case = TRUE) & maxaf_annovar < 0.005  ~ 8,
-                                PVS1 == 0 & grepl("^frameshift|stop|start", ExonicFunc.ensGene, ignore.case = TRUE) & maxaf_annovar < 0.02  ~ 3,
-                                TRUE ~ 0)) %>%
-  mutate(Priority.Score = Priority.Score + truncating) %>%
+  #mutate(truncating = case_when(PVS1 == 0 & grepl("^frameshift|stop|start", ExonicFunc.ensGene, ignore.case = TRUE) & maxaf_annovar < 0.005  ~ 8,
+  #                              PVS1 == 0 & grepl("^frameshift|stop|start", ExonicFunc.ensGene, ignore.case = TRUE) & maxaf_annovar < 0.02  ~ 3,
+  #                              TRUE ~ 0)) %>%
+  #mutate(Priority.Score = Priority.Score + truncating) %>%
   mutate(Priority.Score = case_when(grepl("Pathogenic", InterVar_and_Evidence, ignore.case = FALSE) ~ pmax(Priority.Score, 12),
                                     grepl("Likely pathogenic", InterVar_and_Evidence, ignore.case = FALSE) ~ pmax(Priority.Score, 9),
                                     TRUE ~ Priority.Score)) %>%

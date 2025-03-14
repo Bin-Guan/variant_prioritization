@@ -147,7 +147,7 @@ ps_df <-  left_join(ps_df_crossmap, squirls_pangolin_annotation, by="variantkey"
                                          TRUE ~ 0 )) %>%
   mutate(temp_hgmd_score = case_when( hgmd_class == "DM" ~ 3,
                                       grepl("[A-Z]", temp_existing_variant) | !is.na(HGMD_Overlap4aa) & pmaxaf < 0.005 ~ 1,
-                                      hgmd_class == "DM\\?" ~ 0.5, 
+                                      hgmd_class == "DM?" ~ 0.5, 
                                       TRUE ~ 0)) %>% 
   mutate(clinvar_hgmd_score = pmin(6, temp_clinvar_score + temp_hgmd_score) ) %>% 
   mutate(insilico_score = ifelse(is.na(ClinPred_score), 0, ifelse(ClinPred_score > 0.5, 0.5, 0)) + 
@@ -196,8 +196,8 @@ ps_df <-  left_join(ps_df_crossmap, squirls_pangolin_annotation, by="variantkey"
   mutate(splice_score = pmin(8, (spliceai_rank + temp_genesplicer + temp_maxentscan_diff + temp_dpsi_score + temp_dbscSNV_score + temp_squirl_score + 
                                    temp_pangolin_score + ifelse(pmaxaf < 0.02 & !is.na(branchpoint_prob), 2, 0) + ifelse(pmaxaf < 0.02 & !is.na(labranchor_score), 2, 0) )) ) %>% 
   mutate(priority_score = PrScore_intervar + ifelse(pmaxaf < 0.03, clinvar_hgmd_score, 0) +  
-           ifelse(PVS1 == 1 | pmaxaf >= 0.005 | PrScore_intervar > 6 | splice_score > 2, 0, truncating_vep*3) +
-           pmin(8, ifelse(PVS1 == 1 | pmaxaf >= 0.03, 0, splice_score) + ifelse(pmaxaf >= 0.02, 0, pmin(6, insilico_score)) )) %>% 
+           ifelse(PVS1 == 1 | pmaxaf >= 0.01 | PrScore_intervar > 6, 0, truncating_vep*6) +
+           pmin(8, ifelse(PVS1 == 1 | truncating_vep == 1 | pmaxaf >= 0.03, 0, splice_score) + ifelse(pmaxaf >= 0.02, 0, pmin(6, insilico_score)) )) %>% 
   mutate(other_modification = ifelse(grepl("protein_altering_variant|inframe", CSQ, ignore.case = TRUE) & pmaxaf < 0.01 & PrScore_intervar < 5 & insilico_score < 3, 3, 0) +
            ifelse(grepl("missense_variant", CSQ, ignore.case = TRUE) & temp_mis_z >= 3.09 & SigmaAF_Missense_0001 < 0.005 & pmaxaf < 0.005 & insilico_score < 4, 2, 0) +
            ifelse(grepl("upstream|downstream|UTR", Func_refGeneWithVer) & pmaxaf < 0.005, 0.5, 0) +
