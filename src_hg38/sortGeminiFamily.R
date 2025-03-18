@@ -70,6 +70,7 @@ sortFilterGemini <- function(fileName) {
              mis_z = round(mis_z, 2),
              gno2e3g_af = round(gno2e3g_af,5),
              gnomad_nc_constraint = round(gnomad_nc_constraint,2)) %>%
+      unite("hgmd", hgmd_class, hgmd_id, na.rm = TRUE, remove = FALSE) %>% 
       select('ref_gene', 'chr_variant_id','hg38_pos', 'family_id','family_members', 'family_genotypes', 'samples','aaf', 'caller',
              'panel_class', 'priority_score', 'prscore_intervar', 'clinvar_hgmd_score', 'splice_score', 'insilico_score', 
              exonicfunc_refgenewithver, mane_select, 'refgenewithver','exon','aa_length','intron','omim_inheritance','omim_phen',hgmd,clnsig,clnsigconf, 
