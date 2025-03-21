@@ -17,9 +17,9 @@ library(tidyverse)
 
 args <- commandArgs(trailingOnly=TRUE)
 #When testing, use the line below.
-# setwd("Z:/projects/panel/prioritization/temp")
-# args <- c("NR6A1_nisc__24chr.for.ps.tsv", "squirls.NR6A1_nisc__24chr.csv",
-#           "pangolin.NR6A1_nisc__24chr.tsv", "crossmap.hg19.NR6A1_nisc__24chr.tsv",
+# setwd("Z:/genome/eyeGene_Stargardt/prioritization")
+# args <- c("for.ps.tsv", "squirls.csv",
+#           "pangolin.tsv", "crossmap.hg19.tsv",
 #           "Z:/resources/gnomad/release-2.1.1/gnomad.v2.1.1.lof_metrics.by_gene.txt",
 #           "NR6A1_nisc__24chr.ps.tsv")
 
@@ -118,7 +118,7 @@ ps_df <-  left_join(ps_df_crossmap, squirls_pangolin_annotation, by="variantkey"
            ifelse(is.na(cadd_phred), 0, ifelse(cadd_phred > 15, 0.5, 0) ) +
            temp_genesplicer + temp_maxentscan_diff +
            ifelse(is.na(five_prime_utr_variant_consequence) | max_af > 0.001, 0, 1) +
-           ifelse(am_class == "likely_pathogenic", 0.5, 0) ) %>% 
+           ifelse(is.na(am_class), 0, ifelse(am_class == "likely_pathogenic", 0.5, 0)) ) %>% 
   group_by(ID) %>% slice(which.max(temp_csq_score)) %>% ungroup() %>% 
   mutate(gno2x_expected_an = case_when(CHROM %in% c("X", "chrX") & gno2x_nonpar == "1" ~ 183653,
                                        CHROM %in% c("Y", "chrY") & gno2x_nonpar == "1" ~ 67843,
@@ -173,7 +173,7 @@ ps_df <-  left_join(ps_df_crossmap, squirls_pangolin_annotation, by="variantkey"
            ifelse(is.na(fathmm_xf_noncoding), 0, ifelse(fathmm_xf_noncoding > 0.6 & pmaxaf < 0.02, 0.5, 0)) + 
            ifelse(is.na(hmc_score), 0, ifelse(hmc_score < 0.8, 0.5, 0)) +
            ifelse(is.na(gnomad_nc_constraint), 0, ifelse(gnomad_nc_constraint > 4 & pmaxaf < 0.01, 0.5, 0)) +
-           ifelse(am_class == "likely_pathogenic", 0.5, 0)) %>% 
+           ifelse(grepl("likely_pathogenic", am_class), 0.5, 0)) %>% 
   replace_na(list(clinvar_hgmd_score=0, insilico_score=0, SigmaAF_Missense_0001=0,
                   spliceai_rank=0, pangolin_max=0)) %>% 
   mutate(temp_mis_z = mis_z, temp_dpsi_max_tissue = dpsi_max_tissue, temp_dpsi_zscore = dpsi_zscore) %>% 

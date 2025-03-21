@@ -183,6 +183,7 @@ if config['datatype'].upper() in ["PANEL"]:
 elif config['datatype'].upper() in ["EXOME", "WES"]:
 	localrules: squirls
 	localrules: n_split_vcf
+	localrules: crossmap
 	localrules: vcfanno2
 	localrules: sortGemini
 	localrules: bcftools_norm
@@ -190,6 +191,7 @@ elif config['datatype'].upper() in ["EXOME", "WES"]:
 	localrules: priority_scores
 else:
 	localrules: n_split_vcf
+	localrules: crossmap
 	# localrules: priority_scores
 
 #localrules: VEP_annotate panel above.
@@ -401,6 +403,7 @@ rule annovar_intervar:
 # 	-o {output.avinput} \
 # 	--skip_annovar
 
+
 rule crossmap:
 	input:
 		vcf = 'temp/vt.{sample}__{region}.vcf.gz',
@@ -408,6 +411,7 @@ rule crossmap:
 	output:
 		tsv = temp('temp/crossmap.hg19.{sample}__{region}.tsv')
 	threads: 4
+	resources: res=1
 	shell:
 		"""
 		WORK_DIR=/lscratch/$SLURM_JOB_ID
