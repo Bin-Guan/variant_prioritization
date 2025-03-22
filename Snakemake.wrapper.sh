@@ -1,7 +1,8 @@
 #!/bin/bash
 #SBATCH --gres=lscratch:200
-#SBATCH --cpus-per-task=16
+#SBATCH --cpus-per-task=28
 #SBATCH --mem=32g
+#SBATCH --time=24:0:0
 
 # to run snakemake as batch job
 # run in the data folder for this project
@@ -43,12 +44,15 @@ fi
 #fi
 
 snakemake -s $snakefile \
--pr --local-cores 2 --jobs 1999 \
+-pr --local-cores 4 --jobs 1999 --max-jobs-per-second 1 \
 --cluster-config $json \
 --cluster "$sbcmd"  --latency-wait 120 --rerun-incomplete \
 -k --restart-times 1 --resources res=1 \
 --configfile $@
 
+#$SLURM_JOB_CPUS_PER_NODE When local-cores set at 8 for genome 99 coordinates -- host machine used 24 cpus at the vcf_split step;
+#Thus the local-cores flag did not  limit the number of local jobs.
+#does res=1 limit the number of crossmap rule?
 # --notemp Ignore temp() declaration;
 # --dryrun
 # --unlock
