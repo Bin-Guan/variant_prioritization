@@ -90,8 +90,8 @@ wildcard_constraints:
 	region = '|'.join(REGIONS),
 #	region = '^[0-9a-zA-Z]+:\d+-\d+'
 #	family_name=family_name_con,
-	family_name = '|'.join(Family_Name),
-	sampleid = '|'.join(SampleID)
+	family_name = '|'.join(family_id),
+	sampleid = '|'.join(sample_id)
 
 if config['genomeBuild'].upper() in ['GRCH37', 'HG19']:
 	config['ref_genome'] = '/data/OGL/resources/1000G_phase2_GRCh37/human_g1k_v37_decoy.fasta'
@@ -1045,19 +1045,19 @@ rule dummy:
 #v0.4.6 worked with genome but failed with bp exome; v0.3.1 worked with GRCh37 vcf files without hg38 support.
 
 # create gemini database. 19gb wgs genome --> 104gb in 24 hours.
-localrules: make_gemini_db
-rule make_gemini_db:
-	input:
-		vcf = '{sample}.SORTED.VT.VEP.VCFANNO.vcf.gz',
-#		index = 'temp/{sample}.SORTED.VT.VEP.VCFANNO.vcf.gz.tbi'
-	output:
-		'{sample}.PED_{ped}.gemini.db'
-#	threads: 8
-	shell:
-		"""
-		module load {config[gemini_version]}
-		vcf2db.py {input.vcf} {PEDbase}{wildcards.ped}.ped {output}
-		"""
+# localrules: make_gemini_db
+# rule make_gemini_db:
+# 	input:
+# 		vcf = '{sample}.SORTED.VT.VEP.VCFANNO.vcf.gz',
+# #		index = 'temp/{sample}.SORTED.VT.VEP.VCFANNO.vcf.gz.tbi'
+# 	output:
+# 		'{sample}.PED_{ped}.gemini.db'
+# #	threads: 8
+# 	shell:
+# 		"""
+# 		module load {config[gemini_version]}
+# 		vcf2db.py {input.vcf} {PEDbase}{wildcards.ped}.ped {output}
+# 		"""
 
 #
 #		-e sum_lof_af_gnomad -e max_lof_af_gnomad
