@@ -1029,19 +1029,19 @@ rule spliceai_intervar_edit:
 # 		"""
 # 5/31/22: removed sort from merge_sample_vcf above. bcftools concat --threads {threads} {input.vcf} | bcftools sort -T /lscratch/$SLURM_JOB_ID/ -m 100G -O z -o {output.vcf}
 
-rule peddy_QC:
-	input:
-		'{sample}.SORTED.VT.VEP.VCFANNO.vcf.gz'
-	output:
-		ped = '{sample}_PEDDY.ped_check.csv',
-		het = '{sample}_PEDDY.het_check.csv',
-		sex = '{sample}_PEDDY.sex_check.csv'
-	threads: 4
-	shell:
-		"""
-		module load {config[peddy_version]}
-		peddy -p {threads} {input} {config[ped]} --prefix {wildcards.sample}_PEDDY --sites hg38
-		"""
+# rule peddy_QC:
+# 	input:
+# 		'{sample}.SORTED.VT.VEP.VCFANNO.vcf.gz'
+# 	output:
+# 		ped = '{sample}_PEDDY.ped_check.csv',
+# 		het = '{sample}_PEDDY.het_check.csv',
+# 		sex = '{sample}_PEDDY.sex_check.csv'
+# 	threads: 4
+# 	shell:
+# 		"""
+# 		module load {config[peddy_version]}
+# 		peddy -p {threads} {input} {config[ped]} --prefix {wildcards.sample}_PEDDY --sites hg38
+# 		"""
 #v0.4.6 worked with genome but failed with bp exome; v0.3.1 worked with GRCh37 vcf files without hg38 support.
 
 # create gemini database. 19gb wgs genome --> 104gb in 24 hours.
