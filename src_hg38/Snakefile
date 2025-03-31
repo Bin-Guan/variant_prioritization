@@ -138,175 +138,175 @@ rule dummy:
 		touch {output}
 		"""
 
-localrules: madeline
-rule madeline:
-	input:
-		config['ped']
-	output:
-		'madeline/madeline.done'
-	params:
-		family = Family_Name
-	shell:
-		"""
-		module load Madeline/2.0
-		projectdir=$PWD
-		cd madeline
-		echo -e "FamilyId\tIndividualId\tFather\tMother\tGender\tAffected" > header.txt
-		for family in {params.family}; do
-			grep $family $projectdir/{config[ped]} \
-			| sed -e 's/\t0\t/\t\.\t/g' -e 's/\t0\t/\t\.\t/g' \
-			| awk -F"\t" 'BEGIN{{OFS="\t"}} {{if($5=="1") {{$5="M"}} else {{$5="F"}}; if($6=="2") {{$6="Affected"}} else {{$6="."}}; print $0}}' \
-			| cat header.txt - > $family.txt;
-			madeline -bknS --font-size 16 $family.txt;
-		done
-		rm header.txt
-		cd $projectdir
-		touch {output}
-		"""
+# localrules: madeline
+# rule madeline:
+# 	input:
+# 		config['ped']
+# 	output:
+# 		'madeline/madeline.done'
+# 	params:
+# 		family = Family_Name
+# 	shell:
+# 		"""
+# 		module load Madeline/2.0
+# 		projectdir=$PWD
+# 		cd madeline
+# 		echo -e "FamilyId\tIndividualId\tFather\tMother\tGender\tAffected" > header.txt
+# 		for family in {params.family}; do
+# 			grep $family $projectdir/{config[ped]} \
+# 			| sed -e 's/\t0\t/\t\.\t/g' -e 's/\t0\t/\t\.\t/g' \
+# 			| awk -F"\t" 'BEGIN{{OFS="\t"}} {{if($5=="1") {{$5="M"}} else {{$5="F"}}; if($6=="2") {{$6="Affected"}} else {{$6="."}}; print $0}}' \
+# 			| cat header.txt - > $family.txt;
+# 			madeline -bknS --font-size 16 $family.txt;
+# 		done
+# 		rm header.txt
+# 		cd $projectdir
+# 		touch {output}
+# 		"""
 
-if config['datatype'].upper() in ["PANEL"]:
-	localrules: squirls
-	localrules: n_split_vcf
-	localrules: vcfanno2
-	localrules: sortGemini
-	localrules: bcftools_norm
-	localrules: spliceai_intervar_edit
-	localrules: priority_scores
-	localrules: VEP_annotate
-	localrules: annovar_intervar
-	localrules: crossmap
-	localrules: pangolin_depot
-	localrules: spliceai_depot
-	localrules: spliceai_edit
-	localrules: vcfanno_annotate
-	localrules: peddy_QC
-elif config['datatype'].upper() in ["EXOME", "WES"]:
-	localrules: squirls
-	localrules: n_split_vcf
-	localrules: crossmap
-	localrules: vcfanno2
-	localrules: sortGemini
-	localrules: bcftools_norm
-	localrules: spliceai_intervar_edit
-	localrules: priority_scores
-else:
-	localrules: n_split_vcf
-	localrules: crossmap
-	localrules: bcftools_norm
-	# localrules: priority_scores
+# if config['datatype'].upper() in ["PANEL"]:
+# 	localrules: squirls
+# 	localrules: n_split_vcf
+# 	localrules: vcfanno2
+# 	localrules: sortGemini
+# 	localrules: bcftools_norm
+# 	localrules: spliceai_intervar_edit
+# 	localrules: priority_scores
+# 	localrules: VEP_annotate
+# 	localrules: annovar_intervar
+# 	localrules: crossmap
+# 	localrules: pangolin_depot
+# 	localrules: spliceai_depot
+# 	localrules: spliceai_edit
+# 	localrules: vcfanno_annotate
+# 	localrules: peddy_QC
+# elif config['datatype'].upper() in ["EXOME", "WES"]:
+# 	localrules: squirls
+# 	localrules: n_split_vcf
+# 	localrules: crossmap
+# 	localrules: vcfanno2
+# 	localrules: sortGemini
+# 	localrules: bcftools_norm
+# 	localrules: spliceai_intervar_edit
+# 	localrules: priority_scores
+# else:
+# 	localrules: n_split_vcf
+# 	localrules: crossmap
+# 	localrules: bcftools_norm
+# 	# localrules: priority_scores
 
 #localrules: VEP_annotate panel above.
-localrules: intervar_evidence_omim
-rule intervar_evidence_omim:
-	input:
-		vcf = config['input_vcf']
-	output:
-		evidenceInput = temp('temp/evidence.input'),
-		InterVarEvidence = temp('temp/InterVarEvidence.txt'),
-		omim = temp('temp/omim.vcfanno.file.done'),
-		clinvar = temp('temp/clinvar.file.done')
-	shell:
-		"""
-		if [[ $(module list 2>&1 | grep "R/" | wc -l) < 1 ]]; then module load {config[R_version]}; fi
-		if [[ $(module list 2>&1 | grep "samtools" | wc -l) < 1 ]]; then module load {config[samtools_version]}; fi
-		if [[ $(module list 2>&1 | grep "annovar" | wc -l) < 1 ]]; then module load {config[annovar_version]}; fi
-		Rscript /home/$USER/git/variant_prioritization/src_hg38/intervar_evidence.R /data/OGL/resources/OGLvariantsClassification_hg38.xlsx {output.evidenceInput}
-		# bcftools norm --check-ref s --fasta-ref {config[ref_genome]} --output-type v evidence.input  # needs true vcf style file for normalizaiton.
-		convert2annovar.pl -format vcf4old {output.evidenceInput} -includeinfo | cut -f 1,2,4,5,8,13 > {output.InterVarEvidence}
-		projectdir=$PWD
-		cd /data/OGL/resources/omim/
-		bash buildOMIM1.sh
-		cd /data/OGL/resources/clinvar
-		bash download.clinvar.sh
-		cd $projectdir
-		echo "ClinVar_vcf: '$(zcat /data/OGL/resources/clinvar/clinvar.vcf.gz | head -n 2 | tail -n 1 | sed s/##// )'"  \
-			>> $(grep "configuration_file:" {config[configuration_file]} | cut -d"'" -f 2)
-		touch {output.omim}
-		touch {output.clinvar}
-		"""
+# localrules: intervar_evidence_omim
+# rule intervar_evidence_omim:
+# 	input:
+# 		vcf = config['input_vcf']
+# 	output:
+# 		evidenceInput = temp('temp/evidence.input'),
+# 		InterVarEvidence = temp('temp/InterVarEvidence.txt'),
+# 		omim = temp('temp/omim.vcfanno.file.done'),
+# 		clinvar = temp('temp/clinvar.file.done')
+# 	shell:
+# 		"""
+# 		if [[ $(module list 2>&1 | grep "R/" | wc -l) < 1 ]]; then module load {config[R_version]}; fi
+# 		if [[ $(module list 2>&1 | grep "samtools" | wc -l) < 1 ]]; then module load {config[samtools_version]}; fi
+# 		if [[ $(module list 2>&1 | grep "annovar" | wc -l) < 1 ]]; then module load {config[annovar_version]}; fi
+# 		Rscript /home/$USER/git/variant_prioritization/src_hg38/intervar_evidence.R /data/OGL/resources/OGLvariantsClassification_hg38.xlsx {output.evidenceInput}
+# 		# bcftools norm --check-ref s --fasta-ref {config[ref_genome]} --output-type v evidence.input  # needs true vcf style file for normalizaiton.
+# 		convert2annovar.pl -format vcf4old {output.evidenceInput} -includeinfo | cut -f 1,2,4,5,8,13 > {output.InterVarEvidence}
+# 		projectdir=$PWD
+# 		cd /data/OGL/resources/omim/
+# 		bash buildOMIM1.sh
+# 		cd /data/OGL/resources/clinvar
+# 		bash download.clinvar.sh
+# 		cd $projectdir
+# 		echo "ClinVar_vcf: '$(zcat /data/OGL/resources/clinvar/clinvar.vcf.gz | head -n 2 | tail -n 1 | sed s/##// )'"  \
+# 			>> $(grep "configuration_file:" {config[configuration_file]} | cut -d"'" -f 2)
+# 		touch {output.omim}
+# 		touch {output.clinvar}
+# 		"""
 
-rule n_split_vcf:
-	input:
-		vcf = config['input_vcf']
-	output:
-		vcf = temp('temp/{sample}__{region}.vcf.gz'),
-		index = temp('temp/{sample}__{region}.vcf.gz.tbi')
-	threads: 2
-	shell:
-		"""
-		export REF_CACHE=/lscratch/$SLURM_JOB_ID/
-		if [[ $(module list 2>&1 | grep "samtools" | wc -l) < 1 ]]; then module load {config[samtools_version]}; fi
-		case "{wildcards.region}" in
-			"24chr")
-				bcftools view --threads {threads} -Oz -r {twentyFourChr} {input.vcf} -o {output.vcf}
-				;;
-			"chr21-22")
-				bcftools view --threads {threads} -Oz -r {chr21_22} {input.vcf} -o {output.vcf}
-				;;
-			"chrXY")
-				bcftools view --threads {threads} -Oz -r {chrXY} {input.vcf} -o {output.vcf}
-				;;
-			"MT_contigs")
-				bcftools view --threads {threads} -Oz -r {MT_CONTIGS} {input.vcf} -o {output.vcf}
-				;;
-			*)
-				bcftools view --threads {threads} -Oz -r {wildcards.region} {input.vcf} -o {output.vcf}
-				;;
-		esac
-		tabix -p vcf {output.vcf}
-		"""
+# rule n_split_vcf:
+# 	input:
+# 		vcf = config['input_vcf']
+# 	output:
+# 		vcf = temp('temp/{sample}__{region}.vcf.gz'),
+# 		index = temp('temp/{sample}__{region}.vcf.gz.tbi')
+# 	threads: 2
+# 	shell:
+# 		"""
+# 		export REF_CACHE=/lscratch/$SLURM_JOB_ID/
+# 		if [[ $(module list 2>&1 | grep "samtools" | wc -l) < 1 ]]; then module load {config[samtools_version]}; fi
+# 		case "{wildcards.region}" in
+# 			"24chr")
+# 				bcftools view --threads {threads} -Oz -r {twentyFourChr} {input.vcf} -o {output.vcf}
+# 				;;
+# 			"chr21-22")
+# 				bcftools view --threads {threads} -Oz -r {chr21_22} {input.vcf} -o {output.vcf}
+# 				;;
+# 			"chrXY")
+# 				bcftools view --threads {threads} -Oz -r {chrXY} {input.vcf} -o {output.vcf}
+# 				;;
+# 			"MT_contigs")
+# 				bcftools view --threads {threads} -Oz -r {MT_CONTIGS} {input.vcf} -o {output.vcf}
+# 				;;
+# 			*)
+# 				bcftools view --threads {threads} -Oz -r {wildcards.region} {input.vcf} -o {output.vcf}
+# 				;;
+# 		esac
+# 		tabix -p vcf {output.vcf}
+# 		"""
 
-if config['gatk3'] == 'TRUE':
-	localrules: vt_bgzip_and_tabix_vcf
-	rule vt_bgzip_and_tabix_vcf:
-		input:
-			vcf = 'temp/{sample}__{region}.vcf.gz',
-			index = 'temp/{sample}__{region}.vcf.gz.tbi',
-			clinvar = 'temp/clinvar.file.done'
-		output:
-			vcf = temp('temp/vt.{sample}__{region}.vcf.gz'),
-			index = temp('temp/vt.{sample}__{region}.vcf.gz.tbi')
-		shell:
-			"""
-			export REF_CACHE=/lscratch/$SLURM_JOB_ID/
-			module load {config[samtools_version]}
-			module load {config[vt_version]}
-			zcat {input.vcf} \
-				| sed 's/ID=AD,Number=./ID=AD,Number=R/' \
-				| vt decompose -s - \
-				| vt normalize -r {config[ref_genome]} - \
-				| bgzip -c > {output.vcf}
-			tabix -f -p vcf {output.vcf}
-			"""
-else:
-	rule bcftools_norm:
-		input:
-			vcf = 'temp/{sample}__{region}.vcf.gz',
-			index = 'temp/{sample}__{region}.vcf.gz.tbi',
-			clinvar = 'temp/clinvar.file.done'
-		output:
-			bcf = temp('temp/vt.{sample}__{region}.bcf'),
-			vcf = temp('temp/vt.{sample}__{region}.vcf.gz'),
-			index = temp('temp/vt.{sample}__{region}.vcf.gz.tbi')
-		threads: 4
-#		resources: res=1
-		shell:
-			"""
-			if [[ $(module list 2>&1 | grep "samtools" | wc -l) < 1 ]]; then module load {config[samtools_version]}; fi
-			bcftools norm --multiallelics -any --output-type u --no-version {input.vcf} \
-				| bcftools norm --check-ref s --fasta-ref {config[ref_genome]} --output-type u --no-version - \
-				| bcftools norm --threads $(({threads}-2)) -d exact --output-type b -o {output.bcf}
-			/data/OGL/resources/git/slivar expr \
-				--gnotate /data/OGL/resources/git/topmed.hg38.dbsnp.151.zip \
-				-v {output.bcf}	\
-				| bgzip -f > /lscratch/$SLURM_JOB_ID/$(basename {output.vcf})
-			tabix -f -p vcf /lscratch/$SLURM_JOB_ID/$(basename {output.vcf})
-			if [[ $(module list 2>&1 | grep "vcfanno" | wc -l) < 1 ]]; then module load {config[vcfanno_version]}; fi
-			vcfanno -p 4 ~/git/variant_prioritization/src_hg38/vcfanno_gnomad_clinvar.conf \
-				/lscratch/$SLURM_JOB_ID/$(basename {output.vcf}) \
-			 	| sed 's/Number=A/Number=1/g' | bgzip > {output.vcf}
-			tabix -f -p vcf {output.vcf}
-			"""
+# if config['gatk3'] == 'TRUE':
+# 	localrules: vt_bgzip_and_tabix_vcf
+# 	rule vt_bgzip_and_tabix_vcf:
+# 		input:
+# 			vcf = 'temp/{sample}__{region}.vcf.gz',
+# 			index = 'temp/{sample}__{region}.vcf.gz.tbi',
+# 			clinvar = 'temp/clinvar.file.done'
+# 		output:
+# 			vcf = temp('temp/vt.{sample}__{region}.vcf.gz'),
+# 			index = temp('temp/vt.{sample}__{region}.vcf.gz.tbi')
+# 		shell:
+# 			"""
+# 			export REF_CACHE=/lscratch/$SLURM_JOB_ID/
+# 			module load {config[samtools_version]}
+# 			module load {config[vt_version]}
+# 			zcat {input.vcf} \
+# 				| sed 's/ID=AD,Number=./ID=AD,Number=R/' \
+# 				| vt decompose -s - \
+# 				| vt normalize -r {config[ref_genome]} - \
+# 				| bgzip -c > {output.vcf}
+# 			tabix -f -p vcf {output.vcf}
+# 			"""
+# else:
+# 	rule bcftools_norm:
+# 		input:
+# 			vcf = 'temp/{sample}__{region}.vcf.gz',
+# 			index = 'temp/{sample}__{region}.vcf.gz.tbi',
+# 			clinvar = 'temp/clinvar.file.done'
+# 		output:
+# 			bcf = temp('temp/vt.{sample}__{region}.bcf'),
+# 			vcf = temp('temp/vt.{sample}__{region}.vcf.gz'),
+# 			index = temp('temp/vt.{sample}__{region}.vcf.gz.tbi')
+# 		threads: 4
+# #		resources: res=1
+# 		shell:
+# 			"""
+# 			if [[ $(module list 2>&1 | grep "samtools" | wc -l) < 1 ]]; then module load {config[samtools_version]}; fi
+# 			bcftools norm --multiallelics -any --output-type u --no-version {input.vcf} \
+# 				| bcftools norm --check-ref s --fasta-ref {config[ref_genome]} --output-type u --no-version - \
+# 				| bcftools norm --threads $(({threads}-2)) -d exact --output-type b -o {output.bcf}
+# 			/data/OGL/resources/git/slivar expr \
+# 				--gnotate /data/OGL/resources/git/topmed.hg38.dbsnp.151.zip \
+# 				-v {output.bcf}	\
+# 				| bgzip -f > /lscratch/$SLURM_JOB_ID/$(basename {output.vcf})
+# 			tabix -f -p vcf /lscratch/$SLURM_JOB_ID/$(basename {output.vcf})
+# 			if [[ $(module list 2>&1 | grep "vcfanno" | wc -l) < 1 ]]; then module load {config[vcfanno_version]}; fi
+# 			vcfanno -p 4 ~/git/variant_prioritization/src_hg38/vcfanno_gnomad_clinvar.conf \
+# 				/lscratch/$SLURM_JOB_ID/$(basename {output.vcf}) \
+# 			 	| sed 's/Number=A/Number=1/g' | bgzip > {output.vcf}
+# 			tabix -f -p vcf {output.vcf}
+# 			"""
 #clinvar in this step by vcfanno
 #slivar annotated
 #INFO=<ID=gnomad_popmax_af,Number=1,Type=Float,Description="field from from gnotate VCF">
@@ -323,60 +323,60 @@ else:
 
 #if threads 8 then requires 32G memory.
 
-rule annovar_intervar:
-	input:
-		vcf = 'temp/vt.{sample}__{region}.vcf.gz',
-		index = 'temp/vt.{sample}__{region}.vcf.gz.tbi',
-		InterVarEvidence = 'temp/InterVarEvidence.txt'
-	output:
-		avinput = temp('temp/{sample}__{region}.avinput'),
-		annovar_out = temp('temp/{sample}__{region}.avinput.hg38_multianno.txt'),
-		annovar_grlp = temp('temp/{sample}__{region}.avinput.hg38_multianno.txt.grl_p'),
-		gnomadAF = temp('temp/{sample}__{region}.gnomad3.tsv'),
-		intervar_out = temp('temp/{sample}__{region}.avinput.hg38_multianno.txt.intervar')
-	threads: 4
-	shell:
-		"""
-		if [[ $(module list 2>&1 | grep "annovar" | wc -l) < 1 ]]; then module load {config[annovar_version]}; fi
-		if [[ $(module list 2>&1 | grep "samtools" | wc -l) < 1 ]]; then module load {config[samtools_version]}; fi
-		convert2annovar.pl -format vcf4old {input.vcf} -includeinfo --outfile {output.avinput}
-		if [[ {config[genomeBuild]} == "GRCh38" ]]; then
-			ver=hg38
-		else
-			ver=hg19
-		fi
-		table_annovar.pl {output.avinput} \
-			$ANNOVAR_DATA/$ver \
-			-buildver $ver \
-			-remove \
-			-out {output.avinput} \
-			--protocol refGene,esp6500siv2_all,1000g2015aug_all,dbnsfp42a,dbscsnv11,rmsk,ensGene,knownGene,refGeneWithVer,spidex,avsnp150,mutscore,regsnpintron \
-			-operation  g,f,f,f,f,r,g,g,g,f,f,f,f \
-			--argument '-hgvs',,,,,,,,'-hgvs -splicing 50',,,, \
-			--polish -nastring . \
-			--thread {threads} \
-			--otherinfo \
-			--tempdir /lscratch/$SLURM_JOB_ID
-		cut -f -150 {output.annovar_out} \
-			| sed -e "1 s/Otherinfo1\tOtherinfo2\tOtherinfo3\tOtherinfo4\tOtherinfo5\tOtherinfo6/CHROM\tPOS\tID\tREF\tALT\tQUAL/" \
-				-e "1 s/avsnp150/avsnp147/" \
-			> /lscratch/$SLURM_JOB_ID/$(basename {output.annovar_out})
-		bcftools query -H -f '%CHROM\t%POS\t%REF\t%ALT\t%INFO/gno3_af_all\t%INFO/gno3_af_afr\t%INFO/gno3_af_amr\t%INFO/gno3_af_eas\t%INFO/gno3_af_nfe\t%INFO/gno3_af_sas\t%INFO/gno3_af_asj\t%INFO/gno3_af_ami\t%INFO/gno3_af_fin\t%INFO/gno3_af_mid\t%INFO/gno3_af_oth\t%INFO/CLNALLELEID\t%INFO/CLNDN\t%INFO/CLNDISDB\t%INFO/CLNREVSTAT\t%INFO/CLNSIG\n' {input.vcf} \
-			| sed -e '1 s/^#//' -e '1 s/\[[0-9]*\]//g' -e "1 s/\tgno3_af_all\t/\tgnomAD_genome_ALL\t/" -e "1 s/\tgno3_af_\w\+/\\U&/g" -e "1 s/\tGNO3_AF_/\tgnomAD_genome_/g" \
-			> {output.gnomadAF}
-		if [[ $(module list 2>&1 | grep "R/" | wc -l) < 1 ]]; then module load {config[R_version]}; fi
-		Rscript ~/git/variant_prioritization/src_hg38/annovar_gnomad.R \
-			/lscratch/$SLURM_JOB_ID/$(basename {output.annovar_out}) {output.gnomadAF} {output.annovar_out}.gnomad && mv {output.annovar_out}.gnomad {output.annovar_out}
-		python /data/OGL/resources/git/{config[InterVar_version]}/InterVar/Intervar.py \
-			-t /data/OGL/resources/git/{config[InterVar_version]}/InterVar/intervardb \
-			-c /data/OGL/resources/git/{config[InterVar_version]}/InterVar/config_hg38.ini \
-			-i {output.avinput} \
-			--input_type=AVinput \
-			-d $ANNOVAR_DATA/$ver \
-			--evidence_file={input.InterVarEvidence} \
-			-o {output.avinput} \
-			--skip_annovar
-		"""
+# rule annovar_intervar:
+# 	input:
+# 		vcf = 'temp/vt.{sample}__{region}.vcf.gz',
+# 		index = 'temp/vt.{sample}__{region}.vcf.gz.tbi',
+# 		InterVarEvidence = 'temp/InterVarEvidence.txt'
+# 	output:
+# 		avinput = temp('temp/{sample}__{region}.avinput'),
+# 		annovar_out = temp('temp/{sample}__{region}.avinput.hg38_multianno.txt'),
+# 		annovar_grlp = temp('temp/{sample}__{region}.avinput.hg38_multianno.txt.grl_p'),
+# 		gnomadAF = temp('temp/{sample}__{region}.gnomad3.tsv'),
+# 		intervar_out = temp('temp/{sample}__{region}.avinput.hg38_multianno.txt.intervar')
+# 	threads: 4
+# 	shell:
+# 		"""
+# 		if [[ $(module list 2>&1 | grep "annovar" | wc -l) < 1 ]]; then module load {config[annovar_version]}; fi
+# 		if [[ $(module list 2>&1 | grep "samtools" | wc -l) < 1 ]]; then module load {config[samtools_version]}; fi
+# 		convert2annovar.pl -format vcf4old {input.vcf} -includeinfo --outfile {output.avinput}
+# 		if [[ {config[genomeBuild]} == "GRCh38" ]]; then
+# 			ver=hg38
+# 		else
+# 			ver=hg19
+# 		fi
+# 		table_annovar.pl {output.avinput} \
+# 			$ANNOVAR_DATA/$ver \
+# 			-buildver $ver \
+# 			-remove \
+# 			-out {output.avinput} \
+# 			--protocol refGene,esp6500siv2_all,1000g2015aug_all,dbnsfp42a,dbscsnv11,rmsk,ensGene,knownGene,refGeneWithVer,spidex,avsnp150,mutscore,regsnpintron \
+# 			-operation  g,f,f,f,f,r,g,g,g,f,f,f,f \
+# 			--argument '-hgvs',,,,,,,,'-hgvs -splicing 50',,,, \
+# 			--polish -nastring . \
+# 			--thread {threads} \
+# 			--otherinfo \
+# 			--tempdir /lscratch/$SLURM_JOB_ID
+# 		cut -f -150 {output.annovar_out} \
+# 			| sed -e "1 s/Otherinfo1\tOtherinfo2\tOtherinfo3\tOtherinfo4\tOtherinfo5\tOtherinfo6/CHROM\tPOS\tID\tREF\tALT\tQUAL/" \
+# 				-e "1 s/avsnp150/avsnp147/" \
+# 			> /lscratch/$SLURM_JOB_ID/$(basename {output.annovar_out})
+# 		bcftools query -H -f '%CHROM\t%POS\t%REF\t%ALT\t%INFO/gno3_af_all\t%INFO/gno3_af_afr\t%INFO/gno3_af_amr\t%INFO/gno3_af_eas\t%INFO/gno3_af_nfe\t%INFO/gno3_af_sas\t%INFO/gno3_af_asj\t%INFO/gno3_af_ami\t%INFO/gno3_af_fin\t%INFO/gno3_af_mid\t%INFO/gno3_af_oth\t%INFO/CLNALLELEID\t%INFO/CLNDN\t%INFO/CLNDISDB\t%INFO/CLNREVSTAT\t%INFO/CLNSIG\n' {input.vcf} \
+# 			| sed -e '1 s/^#//' -e '1 s/\[[0-9]*\]//g' -e "1 s/\tgno3_af_all\t/\tgnomAD_genome_ALL\t/" -e "1 s/\tgno3_af_\w\+/\\U&/g" -e "1 s/\tGNO3_AF_/\tgnomAD_genome_/g" \
+# 			> {output.gnomadAF}
+# 		if [[ $(module list 2>&1 | grep "R/" | wc -l) < 1 ]]; then module load {config[R_version]}; fi
+# 		Rscript ~/git/variant_prioritization/src_hg38/annovar_gnomad.R \
+# 			/lscratch/$SLURM_JOB_ID/$(basename {output.annovar_out}) {output.gnomadAF} {output.annovar_out}.gnomad && mv {output.annovar_out}.gnomad {output.annovar_out}
+# 		python /data/OGL/resources/git/{config[InterVar_version]}/InterVar/Intervar.py \
+# 			-t /data/OGL/resources/git/{config[InterVar_version]}/InterVar/intervardb \
+# 			-c /data/OGL/resources/git/{config[InterVar_version]}/InterVar/config_hg38.ini \
+# 			-i {output.avinput} \
+# 			--input_type=AVinput \
+# 			-d $ANNOVAR_DATA/$ver \
+# 			--evidence_file={input.InterVarEvidence} \
+# 			-o {output.avinput} \
+# 			--skip_annovar
+# 		"""
 #{config[annovar_clinvar_version]}, removed after dbnsfp42a on 11/11/2022
 #editing 5/26/2022
 # table_annovar.pl {output.avinput} \
@@ -405,149 +405,149 @@ rule annovar_intervar:
 # 	--skip_annovar
 
 
-rule crossmap:
-	input:
-		vcf = 'temp/vt.{sample}__{region}.vcf.gz',
-		index = 'temp/vt.{sample}__{region}.vcf.gz.tbi'
-	output:
-		tsv = temp('temp/crossmap.hg19.{sample}__{region}.tsv')
-	threads: 4
-#	resources: res=1
-	shell:
-		"""
-		WORK_DIR=/lscratch/$SLURM_JOB_ID
-		if [[ $(module list 2>&1 | grep "samtools" | wc -l) < 1 ]]; then module load {config[samtools_version]}; fi
-		if [[ $(module list 2>&1 | grep "crossmap" | wc -l) < 1 ]]; then module load {config[crossmap_version]}; fi
-		hg19refM=/data/OGL/resources/1000G_phase2_GRCh37/human_g1k_v37_decoyM.fasta
-		hg19ref=/data/OGL/resources/1000G_phase2_GRCh37/human_g1k_v37_decoy.fasta
-		crossmap vcf /data/OGL/resources/ucsc/hg38ToHg19.over.chain.gz \
-			{input.vcf} \
-			$hg19refM \
-			$WORK_DIR/$(basename {output.tsv}).vcf
-		sed -e 's/^chrM/MT/' -e 's/<ID=M,/<ID=MT,/' $WORK_DIR/$(basename {output.tsv}).vcf \
-				| sed -e 's/^chr//' -e 's/<ID=chr/<ID=/' - \
-			 	| bcftools norm --check-ref s --fasta-ref $hg19ref --output-type u - \
-				| bcftools sort -m 60G -T $WORK_DIR/ -Ou - \
-				| bcftools norm -d exact --output-type u - \
-				| bcftools view --no-header -Ov - \
-				| awk -F"\t" 'BEGIN{{OFS="\t"}} NR==1 {{print "CHROM\tPOS\tID\tREF\tALT"}} NR>1 {{print $1,$2,$3,$4,$5}}' - > {output.tsv}
-		"""
+# rule crossmap:
+# 	input:
+# 		vcf = 'temp/vt.{sample}__{region}.vcf.gz',
+# 		index = 'temp/vt.{sample}__{region}.vcf.gz.tbi'
+# 	output:
+# 		tsv = temp('temp/crossmap.hg19.{sample}__{region}.tsv')
+# 	threads: 4
+# #	resources: res=1
+# 	shell:
+# 		"""
+# 		WORK_DIR=/lscratch/$SLURM_JOB_ID
+# 		if [[ $(module list 2>&1 | grep "samtools" | wc -l) < 1 ]]; then module load {config[samtools_version]}; fi
+# 		if [[ $(module list 2>&1 | grep "crossmap" | wc -l) < 1 ]]; then module load {config[crossmap_version]}; fi
+# 		hg19refM=/data/OGL/resources/1000G_phase2_GRCh37/human_g1k_v37_decoyM.fasta
+# 		hg19ref=/data/OGL/resources/1000G_phase2_GRCh37/human_g1k_v37_decoy.fasta
+# 		crossmap vcf /data/OGL/resources/ucsc/hg38ToHg19.over.chain.gz \
+# 			{input.vcf} \
+# 			$hg19refM \
+# 			$WORK_DIR/$(basename {output.tsv}).vcf
+# 		sed -e 's/^chrM/MT/' -e 's/<ID=M,/<ID=MT,/' $WORK_DIR/$(basename {output.tsv}).vcf \
+# 				| sed -e 's/^chr//' -e 's/<ID=chr/<ID=/' - \
+# 			 	| bcftools norm --check-ref s --fasta-ref $hg19ref --output-type u - \
+# 				| bcftools sort -m 60G -T $WORK_DIR/ -Ou - \
+# 				| bcftools norm -d exact --output-type u - \
+# 				| bcftools view --no-header -Ov - \
+# 				| awk -F"\t" 'BEGIN{{OFS="\t"}} NR==1 {{print "CHROM\tPOS\tID\tREF\tALT"}} NR>1 {{print $1,$2,$3,$4,$5}}' - > {output.tsv}
+# 		"""
 
-rule squirls:
-	input:
-		vcf = 'temp/vt.{sample}__{region}.vcf.gz',
-		index = 'temp/vt.{sample}__{region}.vcf.gz.tbi'
-	output:
-		barevcf = temp('temp/{sample}__{region}.bare.csv'),
-		squirls_csv = temp('temp/squirls.{sample}__{region}.csv')
-	shell:
-		"""
-		if [[ $(module list 2>&1 | grep "samtools" | wc -l) < 1 ]]; then module load {config[samtools_version]}; fi
-		bcftools view --no-header -Ov {input.vcf} | awk -F"\t" 'BEGIN{{OFS=","}} NR==1 {{print "CHROM,POS,REF,ALT"}} NR>1 {{print $1,$2,$4,$5}}' - > {output.barevcf}
-		if [[ $(module list 2>&1 | grep "java" | wc -l) < 1 ]]; then module load java; fi
-		java -jar /data/OGL/resources/squirls-cli-1.0.0/squirls-cli-1.0.0.jar \
-			annotate-csv \
-			/data/OGL/resources/squirls/squirls-config_hg38.yml \
-			{output.barevcf} {output.squirls_csv}
-		"""
+# rule squirls:
+# 	input:
+# 		vcf = 'temp/vt.{sample}__{region}.vcf.gz',
+# 		index = 'temp/vt.{sample}__{region}.vcf.gz.tbi'
+# 	output:
+# 		barevcf = temp('temp/{sample}__{region}.bare.csv'),
+# 		squirls_csv = temp('temp/squirls.{sample}__{region}.csv')
+# 	shell:
+# 		"""
+# 		if [[ $(module list 2>&1 | grep "samtools" | wc -l) < 1 ]]; then module load {config[samtools_version]}; fi
+# 		bcftools view --no-header -Ov {input.vcf} | awk -F"\t" 'BEGIN{{OFS=","}} NR==1 {{print "CHROM,POS,REF,ALT"}} NR>1 {{print $1,$2,$4,$5}}' - > {output.barevcf}
+# 		if [[ $(module list 2>&1 | grep "java" | wc -l) < 1 ]]; then module load java; fi
+# 		java -jar /data/OGL/resources/squirls-cli-1.0.0/squirls-cli-1.0.0.jar \
+# 			annotate-csv \
+# 			/data/OGL/resources/squirls/squirls-config_hg38.yml \
+# 			{output.barevcf} {output.squirls_csv}
+# 		"""
 
-if config['pangolin'].upper() == 'VCFANNO':
-	localrules: pangolin_depot
-	rule pangolin_depot:
-		input:
-			vcf = 'temp/vt.{sample}__{region}.vcf.gz',
-			index = 'temp/vt.{sample}__{region}.vcf.gz.tbi'
-		output:
-			vcf = temp('temp/pangolin.{sample}__{region}.vcf.gz'),
-			index = temp('temp/pangolin.{sample}__{region}.vcf.gz.tbi'),
-			pangolin_tsv = temp('temp/pangolin.{sample}__{region}.tsv')
-		threads: 4
-		shell:
-			"""
-			if [[ $(module list 2>&1 | grep "samtools" | wc -l) < 1 ]]; then module load {config[samtools_version]}; fi
-			if [[ $(module list 2>&1 | grep "vcfanno" | wc -l) < 1 ]]; then module load {config[vcfanno_version]}; fi
-			vcfanno -p {threads} ~/git/variant_prioritization/src_hg38/pangolin.depot.conf {input.vcf} \
-				| bgzip --threads {threads} -f > {output.vcf}
-			tabix -f -p vcf {output.vcf}
-			bcftools query -H -f '%CHROM\t%POS\t%REF\t%ALT\t%INFO/Pangolin\n' {output.vcf} \
-				| sed -e '1 s/^#//' -e '1 s/\[[0-9]*\]//g' \
-				> {output.pangolin_tsv}
-			"""
-else:
-	rule pangolin_isec:
-		input:
-			vcf = 'temp/vt.{sample}__{region}.vcf.gz',
-			index = 'temp/vt.{sample}__{region}.vcf.gz.tbi'
-		output:
-			barevcf = temp('temp/{sample}__{region}.pangolin.bare.vcf.gz'),
-			barevcfindex = temp('temp/{sample}__{region}.pangolin.bare.vcf.gz.tbi'),
-			pangolin_input = temp('temp/{sample}__{region}.pangolin_input.vcf.gz'),
-			pangolin_input_index = temp('temp/{sample}__{region}.pangolin_input.vcf.gz.tbi'),
-			variant_in_depot = temp('temp/{sample}__{region}.pangolin_depot.vcf.gz'),
-			variant_in_depot_index = temp('temp/{sample}__{region}.pangolin_depot.vcf.gz.tbi')
-		threads: 8
-		shell:
-			"""
-			if [[ $(module list 2>&1 | grep "samtools" | wc -l) < 1 ]]; then module load {config[samtools_version]}; fi
-			echo -e "##fileformat=VCFv4.2\n#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO" > /lscratch/$SLURM_JOB_ID/vcf.header && echo "vcf.header" || exit 1
-			( bcftools view --no-header -Ov {input.vcf} | awk -F"\t" 'BEGIN{{OFS="\t"}} {{print $1,$2,".",$4,$5,".",".","."}}' - | cat /lscratch/$SLURM_JOB_ID/vcf.header - | bgzip --threads $(({threads}-2)) -c > {output.barevcf} ) && echo "barevcf" || exit 1
-			tabix -f -p vcf {output.barevcf} && echo "index barevcf" || exit 1
-			bcftools isec --threads {threads} -Oz -p /lscratch/$SLURM_JOB_ID {output.barevcf} /data/OGL/resources/pangolin/pangolin.depot.GRCh38.vcf.gz && echo "isec" || exit 1
-			cp /lscratch/$SLURM_JOB_ID/0000.vcf.gz {output.pangolin_input}
-			cp /lscratch/$SLURM_JOB_ID/0003.vcf.gz {output.variant_in_depot}
-			tabix -f -p vcf {output.pangolin_input}
-			tabix -f -p vcf {output.variant_in_depot}
-			"""
-	rule pangolin:
-		input:
-			pangolin_input = 'temp/{sample}__{region}.pangolin_input.vcf.gz',
-			pangolin_input_index = 'temp/{sample}__{region}.pangolin_input.vcf.gz.tbi',
-			variant_in_depot = 'temp/{sample}__{region}.pangolin_depot.vcf.gz',
-			variant_in_depot_index = 'temp/{sample}__{region}.pangolin_depot.vcf.gz.tbi'
-		output:
-			new_anno_pangolin = temp('temp/{sample}__{region}.new.pangolin.vcf.gz'),
-			new_anno_pangolin_index = temp('temp/{sample}__{region}.new.pangolin.vcf.gz.tbi'),
-			vcf = temp('temp/pangolin.{sample}__{region}.vcf.gz'),
-			index = temp('temp/pangolin.{sample}__{region}.vcf.gz.tbi'),
-			tsv = temp('temp/pangolin.{sample}__{region}.tsv')
-		threads: 14
-		shell:
-			"""
-			module load {config[pangolin-splice_version]} {config[samtools_version]}
-			zcat {input.pangolin_input} > {input.pangolin_input}.vcf
-			pangolin {input.pangolin_input}.vcf \
-				/data/OGL/resources/genomes/NCBI/GRCh38Decoy/genome.AGTCNonly.fa \
-				/data/OGL/resources/pangolin/gencode.v38.annotation.db \
-				{output.new_anno_pangolin}
-			bgzip --threads $(({threads}-2)) -c {output.new_anno_pangolin}.vcf > {output.new_anno_pangolin}
-			tabix -f -p vcf {output.new_anno_pangolin}
-			bcftools concat --threads {threads} -a {output.new_anno_pangolin} {input.variant_in_depot} -Oz -o {output.vcf}
-			tabix -f -p vcf {output.vcf}
-			bcftools query -H -f '%CHROM\t%POS\t%REF\t%ALT\t%INFO/Pangolin\n' {output.vcf} \
-				| sed -e '1 s/^#//' -e '1 s/\[[0-9]*\]//g' \
-				> {output.tsv}
-			"""
+# if config['pangolin'].upper() == 'VCFANNO':
+# 	localrules: pangolin_depot
+# 	rule pangolin_depot:
+# 		input:
+# 			vcf = 'temp/vt.{sample}__{region}.vcf.gz',
+# 			index = 'temp/vt.{sample}__{region}.vcf.gz.tbi'
+# 		output:
+# 			vcf = temp('temp/pangolin.{sample}__{region}.vcf.gz'),
+# 			index = temp('temp/pangolin.{sample}__{region}.vcf.gz.tbi'),
+# 			pangolin_tsv = temp('temp/pangolin.{sample}__{region}.tsv')
+# 		threads: 4
+# 		shell:
+# 			"""
+# 			if [[ $(module list 2>&1 | grep "samtools" | wc -l) < 1 ]]; then module load {config[samtools_version]}; fi
+# 			if [[ $(module list 2>&1 | grep "vcfanno" | wc -l) < 1 ]]; then module load {config[vcfanno_version]}; fi
+# 			vcfanno -p {threads} ~/git/variant_prioritization/src_hg38/pangolin.depot.conf {input.vcf} \
+# 				| bgzip --threads {threads} -f > {output.vcf}
+# 			tabix -f -p vcf {output.vcf}
+# 			bcftools query -H -f '%CHROM\t%POS\t%REF\t%ALT\t%INFO/Pangolin\n' {output.vcf} \
+# 				| sed -e '1 s/^#//' -e '1 s/\[[0-9]*\]//g' \
+# 				> {output.pangolin_tsv}
+# 			"""
+# else:
+# 	rule pangolin_isec:
+# 		input:
+# 			vcf = 'temp/vt.{sample}__{region}.vcf.gz',
+# 			index = 'temp/vt.{sample}__{region}.vcf.gz.tbi'
+# 		output:
+# 			barevcf = temp('temp/{sample}__{region}.pangolin.bare.vcf.gz'),
+# 			barevcfindex = temp('temp/{sample}__{region}.pangolin.bare.vcf.gz.tbi'),
+# 			pangolin_input = temp('temp/{sample}__{region}.pangolin_input.vcf.gz'),
+# 			pangolin_input_index = temp('temp/{sample}__{region}.pangolin_input.vcf.gz.tbi'),
+# 			variant_in_depot = temp('temp/{sample}__{region}.pangolin_depot.vcf.gz'),
+# 			variant_in_depot_index = temp('temp/{sample}__{region}.pangolin_depot.vcf.gz.tbi')
+# 		threads: 8
+# 		shell:
+# 			"""
+# 			if [[ $(module list 2>&1 | grep "samtools" | wc -l) < 1 ]]; then module load {config[samtools_version]}; fi
+# 			echo -e "##fileformat=VCFv4.2\n#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO" > /lscratch/$SLURM_JOB_ID/vcf.header && echo "vcf.header" || exit 1
+# 			( bcftools view --no-header -Ov {input.vcf} | awk -F"\t" 'BEGIN{{OFS="\t"}} {{print $1,$2,".",$4,$5,".",".","."}}' - | cat /lscratch/$SLURM_JOB_ID/vcf.header - | bgzip --threads $(({threads}-2)) -c > {output.barevcf} ) && echo "barevcf" || exit 1
+# 			tabix -f -p vcf {output.barevcf} && echo "index barevcf" || exit 1
+# 			bcftools isec --threads {threads} -Oz -p /lscratch/$SLURM_JOB_ID {output.barevcf} /data/OGL/resources/pangolin/pangolin.depot.GRCh38.vcf.gz && echo "isec" || exit 1
+# 			cp /lscratch/$SLURM_JOB_ID/0000.vcf.gz {output.pangolin_input}
+# 			cp /lscratch/$SLURM_JOB_ID/0003.vcf.gz {output.variant_in_depot}
+# 			tabix -f -p vcf {output.pangolin_input}
+# 			tabix -f -p vcf {output.variant_in_depot}
+# 			"""
+# 	rule pangolin:
+# 		input:
+# 			pangolin_input = 'temp/{sample}__{region}.pangolin_input.vcf.gz',
+# 			pangolin_input_index = 'temp/{sample}__{region}.pangolin_input.vcf.gz.tbi',
+# 			variant_in_depot = 'temp/{sample}__{region}.pangolin_depot.vcf.gz',
+# 			variant_in_depot_index = 'temp/{sample}__{region}.pangolin_depot.vcf.gz.tbi'
+# 		output:
+# 			new_anno_pangolin = temp('temp/{sample}__{region}.new.pangolin.vcf.gz'),
+# 			new_anno_pangolin_index = temp('temp/{sample}__{region}.new.pangolin.vcf.gz.tbi'),
+# 			vcf = temp('temp/pangolin.{sample}__{region}.vcf.gz'),
+# 			index = temp('temp/pangolin.{sample}__{region}.vcf.gz.tbi'),
+# 			tsv = temp('temp/pangolin.{sample}__{region}.tsv')
+# 		threads: 14
+# 		shell:
+# 			"""
+# 			module load {config[pangolin-splice_version]} {config[samtools_version]}
+# 			zcat {input.pangolin_input} > {input.pangolin_input}.vcf
+# 			pangolin {input.pangolin_input}.vcf \
+# 				/data/OGL/resources/genomes/NCBI/GRCh38Decoy/genome.AGTCNonly.fa \
+# 				/data/OGL/resources/pangolin/gencode.v38.annotation.db \
+# 				{output.new_anno_pangolin}
+# 			bgzip --threads $(({threads}-2)) -c {output.new_anno_pangolin}.vcf > {output.new_anno_pangolin}
+# 			tabix -f -p vcf {output.new_anno_pangolin}
+# 			bcftools concat --threads {threads} -a {output.new_anno_pangolin} {input.variant_in_depot} -Oz -o {output.vcf}
+# 			tabix -f -p vcf {output.vcf}
+# 			bcftools query -H -f '%CHROM\t%POS\t%REF\t%ALT\t%INFO/Pangolin\n' {output.vcf} \
+# 				| sed -e '1 s/^#//' -e '1 s/\[[0-9]*\]//g' \
+# 				> {output.tsv}
+# 			"""
 #
-rule merge_pangolin_vcf:
-	input:
-		vcf = expand('temp/{{sample}}__{region}.new.pangolin.vcf.gz', region=REGIONS),
-		index = expand('temp/{{sample}}__{region}.new.pangolin.vcf.gz.tbi', region=REGIONS)
-	output:
-		temp('temp/{sample}.pangolin.new.vcf.depot.merged')
-	threads: 16
-	shell:
-		"""
-		export REF_CACHE=/lscratch/$SLURM_JOB_ID/
-		if [[ $(module list 2>&1 | grep "samtools" | wc -l) < 1 ]]; then module load {config[samtools_version]}; fi
-		bcftools concat --threads {threads} -a --rm-dups none {input.vcf} -Oz -o /lscratch/$SLURM_JOB_ID/new.pangolin.vcf.gz
-		tabix -f -p vcf /lscratch/$SLURM_JOB_ID/new.pangolin.vcf.gz
-		( bcftools concat --threads {threads} -a --rm-dups none --no-version \
-			/data/OGL/resources/pangolin/pangolin.depot.GRCh38.vcf.gz /lscratch/$SLURM_JOB_ID/new.pangolin.vcf.gz \
-			-Oz -o /lscratch/$SLURM_JOB_ID/pangolin.depot.GRCh38.vcf.gz ) || exit 1
-		tabix -f -p vcf /lscratch/$SLURM_JOB_ID/pangolin.depot.GRCh38.vcf.gz || exit 1
-		cp /lscratch/$SLURM_JOB_ID/pangolin.depot.GRCh38.vcf.gz* /data/OGL/resources/pangolin
-		touch {output}
-		"""
+# rule merge_pangolin_vcf:
+# 	input:
+# 		vcf = expand('temp/{{sample}}__{region}.new.pangolin.vcf.gz', region=REGIONS),
+# 		index = expand('temp/{{sample}}__{region}.new.pangolin.vcf.gz.tbi', region=REGIONS)
+# 	output:
+# 		temp('temp/{sample}.pangolin.new.vcf.depot.merged')
+# 	threads: 16
+# 	shell:
+# 		"""
+# 		export REF_CACHE=/lscratch/$SLURM_JOB_ID/
+# 		if [[ $(module list 2>&1 | grep "samtools" | wc -l) < 1 ]]; then module load {config[samtools_version]}; fi
+# 		bcftools concat --threads {threads} -a --rm-dups none {input.vcf} -Oz -o /lscratch/$SLURM_JOB_ID/new.pangolin.vcf.gz
+# 		tabix -f -p vcf /lscratch/$SLURM_JOB_ID/new.pangolin.vcf.gz
+# 		( bcftools concat --threads {threads} -a --rm-dups none --no-version \
+# 			/data/OGL/resources/pangolin/pangolin.depot.GRCh38.vcf.gz /lscratch/$SLURM_JOB_ID/new.pangolin.vcf.gz \
+# 			-Oz -o /lscratch/$SLURM_JOB_ID/pangolin.depot.GRCh38.vcf.gz ) || exit 1
+# 		tabix -f -p vcf /lscratch/$SLURM_JOB_ID/pangolin.depot.GRCh38.vcf.gz || exit 1
+# 		cp /lscratch/$SLURM_JOB_ID/pangolin.depot.GRCh38.vcf.gz* /data/OGL/resources/pangolin
+# 		touch {output}
+# 		"""
 
 # rule squirls_pangolin:
 # 	input:
@@ -573,119 +573,119 @@ rule merge_pangolin_vcf:
 # 		mv {output.pangolin}.csv {output.pangolin}
 # 		"""
 #annotate-csv does not allow html output. Only annotate-vcf has html output.
-if config['spliceai'].upper() == 'WRAPPER':
-	rule spliceai_wrapper:
-		input:
-			vcf = 'temp/vt.{sample}__{region}.vcf.gz',
-			index = 'temp/vt.{sample}__{region}.vcf.gz.tbi'
-		output:
-			vcf = temp('temp/spliceai.{sample}__{region}.vcf.gz'),
-			index = temp('temp/spliceai.{sample}__{region}.vcf.gz.tbi')
-		shell:
-			"""
-			module load {config[spliceai-wrapper_version]}
-			module load {config[samtools_version]}
-			spliceai-wrapper annotate \
-				--input-vcf {input.vcf} \
-				--output-vcf {output.vcf} \
-				--precomputed-db-path /data/OGVFB/OGL_NGS/variant_prioritization/data/spliceai_wrapper/precomputed.sqlite3 \
-				--cache-db-path /data/OGVFB/OGL_NGS/variant_prioritization/data/spliceai_wrapper/cache.sqlite3 \
-				--release {config[genomeBuild]} \
-				--path-reference {config[ref_genome]} \
-				--genes-tsv /data/OGVFB/OGL_NGS/variant_prioritization/data/spliceai_wrapper/grch37.txt
-			tabix -f -p vcf {output.vcf}
-			"""
-elif config['spliceai'].upper() == 'VCFANNO':
-	localrules: spliceai_depot
-	rule spliceai_depot:
-		input:
-			vcf = 'temp/vt.{sample}__{region}.vcf.gz',
-			index = 'temp/vt.{sample}__{region}.vcf.gz.tbi'
-		output:
-			vcf = temp('temp/spliceai.{sample}__{region}.vcf.gz'),
-			index = temp('temp/spliceai.{sample}__{region}.vcf.gz.tbi')
-		threads: 4
-		shell:
-			"""
-			if [[ $(module list 2>&1 | grep "samtools" | wc -l) < 1 ]]; then module load {config[samtools_version]}; fi
-			if [[ $(module list 2>&1 | grep "vcfanno" | wc -l) < 1 ]]; then module load {config[vcfanno_version]}; fi
-			vcfanno -p {threads} ~/git/variant_prioritization/src_hg38/spliceai.depot.conf {input.vcf} \
-				| bgzip --threads {threads} -f > {output.vcf}
-			tabix -f -p vcf {output.vcf}
-			"""
-else:
-	rule spliceai_isec:
-		input:
-			vcf = 'temp/vt.{sample}__{region}.vcf.gz',
-			index = 'temp/vt.{sample}__{region}.vcf.gz.tbi'
-		output:
-			barevcf = temp('temp/{sample}__{region}.bare.vcf.gz'),
-			barevcfindex = temp('temp/{sample}__{region}.bare.vcf.gz.tbi'),
-			spliceai_input = temp('temp/{sample}__{region}.spliceai_input.vcf.gz'),
-			spliceai_input_index = temp('temp/{sample}__{region}.spliceai_input.vcf.gz.tbi'),
-			variant_in_depot = temp('temp/{sample}__{region}.spliceai_depot.vcf.gz'),
-			variant_in_depot_index = temp('temp/{sample}__{region}.spliceai_depot.vcf.gz.tbi')
-		threads: 8
-		shell:
-			"""
-			if [[ $(module list 2>&1 | grep "samtools" | wc -l) < 1 ]]; then module load {config[samtools_version]}; fi
-			echo -e "##fileformat=VCFv4.2\n#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO" > /lscratch/$SLURM_JOB_ID/vcf.header && echo "vcf.header" || exit 1
-			( bcftools view --no-header -Ov {input.vcf} | awk -F"\t" 'BEGIN{{OFS="\t"}} {{print $1,$2,".",$4,$5,".",".","."}}' - | cat /lscratch/$SLURM_JOB_ID/vcf.header - | bgzip --threads $(({threads}-2)) -c > {output.barevcf} ) && echo "barevcf" || exit 1
-			tabix -f -p vcf {output.barevcf} && echo "index barevcf" || exit 1
-			bcftools isec --threads {threads} -Oz -p /lscratch/$SLURM_JOB_ID {output.barevcf} /data/OGL/resources/spliceai/spliceai500.depot.GRCh38.vcf.gz && echo "isec" || exit 1
-			cp /lscratch/$SLURM_JOB_ID/0000.vcf.gz {output.spliceai_input}
-			cp /lscratch/$SLURM_JOB_ID/0003.vcf.gz {output.variant_in_depot}
-			tabix -f -p vcf {output.spliceai_input}
-			tabix -f -p vcf {output.variant_in_depot}
-			"""
-	rule spliceai:
-		input:
-			spliceai_input = 'temp/{sample}__{region}.spliceai_input.vcf.gz',
-			spliceai_input_index = 'temp/{sample}__{region}.spliceai_input.vcf.gz.tbi',
-			variant_in_depot = 'temp/{sample}__{region}.spliceai_depot.vcf.gz',
-			variant_in_depot_index = 'temp/{sample}__{region}.spliceai_depot.vcf.gz.tbi'
-		output:
-			new_anno_spliceai = temp('temp/{sample}__{region}.new.spliceai.vcf.gz'),
-			new_anno_spliceai_index = temp('temp/{sample}__{region}.new.spliceai.vcf.gz.tbi'),
-			vcf = temp('temp/spliceai.{sample}__{region}.vcf.gz'),
-			index = temp('temp/spliceai.{sample}__{region}.vcf.gz.tbi')
-		threads: 14
-		shell:
-			"""
-			module load {config[spliceai_version]} {config[samtools_version]}
-			if [[ {config[genomeBuild]} == "GRCh38" ]]; then
-				ver=grch38
-			else
-				ver=grch37
-			fi
-			spliceai -I {input.spliceai_input} -R {config[ref_genome]} -A $ver -D 500 -M 0 -O {output.new_anno_spliceai} && echo "spliceai" || exit 1
-			tabix -f -p vcf {output.new_anno_spliceai}
-			bcftools concat --threads {threads} -a {output.new_anno_spliceai} {input.variant_in_depot} -Oz -o {output.vcf}
-			tabix -f -p vcf {output.vcf}
-			"""
+# if config['spliceai'].upper() == 'WRAPPER':
+# 	rule spliceai_wrapper:
+# 		input:
+# 			vcf = 'temp/vt.{sample}__{region}.vcf.gz',
+# 			index = 'temp/vt.{sample}__{region}.vcf.gz.tbi'
+# 		output:
+# 			vcf = temp('temp/spliceai.{sample}__{region}.vcf.gz'),
+# 			index = temp('temp/spliceai.{sample}__{region}.vcf.gz.tbi')
+# 		shell:
+# 			"""
+# 			module load {config[spliceai-wrapper_version]}
+# 			module load {config[samtools_version]}
+# 			spliceai-wrapper annotate \
+# 				--input-vcf {input.vcf} \
+# 				--output-vcf {output.vcf} \
+# 				--precomputed-db-path /data/OGVFB/OGL_NGS/variant_prioritization/data/spliceai_wrapper/precomputed.sqlite3 \
+# 				--cache-db-path /data/OGVFB/OGL_NGS/variant_prioritization/data/spliceai_wrapper/cache.sqlite3 \
+# 				--release {config[genomeBuild]} \
+# 				--path-reference {config[ref_genome]} \
+# 				--genes-tsv /data/OGVFB/OGL_NGS/variant_prioritization/data/spliceai_wrapper/grch37.txt
+# 			tabix -f -p vcf {output.vcf}
+# 			"""
+# elif config['spliceai'].upper() == 'VCFANNO':
+# 	localrules: spliceai_depot
+# 	rule spliceai_depot:
+# 		input:
+# 			vcf = 'temp/vt.{sample}__{region}.vcf.gz',
+# 			index = 'temp/vt.{sample}__{region}.vcf.gz.tbi'
+# 		output:
+# 			vcf = temp('temp/spliceai.{sample}__{region}.vcf.gz'),
+# 			index = temp('temp/spliceai.{sample}__{region}.vcf.gz.tbi')
+# 		threads: 4
+# 		shell:
+# 			"""
+# 			if [[ $(module list 2>&1 | grep "samtools" | wc -l) < 1 ]]; then module load {config[samtools_version]}; fi
+# 			if [[ $(module list 2>&1 | grep "vcfanno" | wc -l) < 1 ]]; then module load {config[vcfanno_version]}; fi
+# 			vcfanno -p {threads} ~/git/variant_prioritization/src_hg38/spliceai.depot.conf {input.vcf} \
+# 				| bgzip --threads {threads} -f > {output.vcf}
+# 			tabix -f -p vcf {output.vcf}
+# 			"""
+# else:
+# 	rule spliceai_isec:
+# 		input:
+# 			vcf = 'temp/vt.{sample}__{region}.vcf.gz',
+# 			index = 'temp/vt.{sample}__{region}.vcf.gz.tbi'
+# 		output:
+# 			barevcf = temp('temp/{sample}__{region}.bare.vcf.gz'),
+# 			barevcfindex = temp('temp/{sample}__{region}.bare.vcf.gz.tbi'),
+# 			spliceai_input = temp('temp/{sample}__{region}.spliceai_input.vcf.gz'),
+# 			spliceai_input_index = temp('temp/{sample}__{region}.spliceai_input.vcf.gz.tbi'),
+# 			variant_in_depot = temp('temp/{sample}__{region}.spliceai_depot.vcf.gz'),
+# 			variant_in_depot_index = temp('temp/{sample}__{region}.spliceai_depot.vcf.gz.tbi')
+# 		threads: 8
+# 		shell:
+# 			"""
+# 			if [[ $(module list 2>&1 | grep "samtools" | wc -l) < 1 ]]; then module load {config[samtools_version]}; fi
+# 			echo -e "##fileformat=VCFv4.2\n#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO" > /lscratch/$SLURM_JOB_ID/vcf.header && echo "vcf.header" || exit 1
+# 			( bcftools view --no-header -Ov {input.vcf} | awk -F"\t" 'BEGIN{{OFS="\t"}} {{print $1,$2,".",$4,$5,".",".","."}}' - | cat /lscratch/$SLURM_JOB_ID/vcf.header - | bgzip --threads $(({threads}-2)) -c > {output.barevcf} ) && echo "barevcf" || exit 1
+# 			tabix -f -p vcf {output.barevcf} && echo "index barevcf" || exit 1
+# 			bcftools isec --threads {threads} -Oz -p /lscratch/$SLURM_JOB_ID {output.barevcf} /data/OGL/resources/spliceai/spliceai500.depot.GRCh38.vcf.gz && echo "isec" || exit 1
+# 			cp /lscratch/$SLURM_JOB_ID/0000.vcf.gz {output.spliceai_input}
+# 			cp /lscratch/$SLURM_JOB_ID/0003.vcf.gz {output.variant_in_depot}
+# 			tabix -f -p vcf {output.spliceai_input}
+# 			tabix -f -p vcf {output.variant_in_depot}
+# 			"""
+# 	rule spliceai:
+# 		input:
+# 			spliceai_input = 'temp/{sample}__{region}.spliceai_input.vcf.gz',
+# 			spliceai_input_index = 'temp/{sample}__{region}.spliceai_input.vcf.gz.tbi',
+# 			variant_in_depot = 'temp/{sample}__{region}.spliceai_depot.vcf.gz',
+# 			variant_in_depot_index = 'temp/{sample}__{region}.spliceai_depot.vcf.gz.tbi'
+# 		output:
+# 			new_anno_spliceai = temp('temp/{sample}__{region}.new.spliceai.vcf.gz'),
+# 			new_anno_spliceai_index = temp('temp/{sample}__{region}.new.spliceai.vcf.gz.tbi'),
+# 			vcf = temp('temp/spliceai.{sample}__{region}.vcf.gz'),
+# 			index = temp('temp/spliceai.{sample}__{region}.vcf.gz.tbi')
+# 		threads: 14
+# 		shell:
+# 			"""
+# 			module load {config[spliceai_version]} {config[samtools_version]}
+# 			if [[ {config[genomeBuild]} == "GRCh38" ]]; then
+# 				ver=grch38
+# 			else
+# 				ver=grch37
+# 			fi
+# 			spliceai -I {input.spliceai_input} -R {config[ref_genome]} -A $ver -D 500 -M 0 -O {output.new_anno_spliceai} && echo "spliceai" || exit 1
+# 			tabix -f -p vcf {output.new_anno_spliceai}
+# 			bcftools concat --threads {threads} -a {output.new_anno_spliceai} {input.variant_in_depot} -Oz -o {output.vcf}
+# 			tabix -f -p vcf {output.vcf}
+# 			"""
 # if [[ $(cat test.empty.vcf |  grep -v "^#" | wc -l) = 0 ]]; then echo "empty"; else echo "spliceai"; fi
 #| head -n 500 | grep "^#" | awk -F"\t" 'BEGIN{{OFS="\t"}} /^##/ {{print $0; next;}} !/^##/ {{print $1,$2,$3,$4,$5,$6,$7,$8}}' - > /lscratch/$SLURM_JOB_ID/ this line was fine in sinteractive but threw error code in snakemake run
 ##spliceAI: -M 1: Mask scores representing annotated acceptor/donor gain and unannotated acceptor/donor loss (default: 0). SpliceAI authors recommend using raw files for alternative splicing analysis and masked files for variant interpretation.
 ## changed to -M 0 on 8/7/2020 because of pax6 variant.
-localrules: spliceai_edit
-rule spliceai_edit:
-	input:
-		vcf = 'temp/spliceai.{sample}__{region}.vcf.gz',
-		index = 'temp/spliceai.{sample}__{region}.vcf.gz.tbi'
-	output:
-	#	tsv = temp('temp/spliceai.{sample}__{region}.tsv'),
-		tsv_cut = temp('temp/spliceai.{sample}__{region}.tsv.cut')
-	#	index = temp('temp/spliceai.vt.{sample}__{region}.tsv.gz.tbi')
-	shell:
-	# use spliceai_vcfanno_v3.sh file for non-split files
-		"""
-	 	if [[ $(module list 2>&1 | grep "samtools" | wc -l) < 1 ]]; then module load {config[samtools_version]}; fi
-		bcftools query -H -f '%CHROM\t%POS\t%ID\t%REF\t%ALT\t%INFO/SpliceAI\n' {input.vcf} \
-			| sed -e '1 s/^#//' -e '1 s/\[[0-9]*\]//g' \
-			| awk -F"\t" 'BEGIN{{OFS="\t"}} !/,/ {{split($6, splices, "|"); max = splices[3]; for(m = 3; m <=6; m++) {{if(max<splices[m]) max = splices[m]}} print $0,max; next; }} /,/ {{n = split($6,annotation,","); max = 0; anno = annotation[1]; for (i = 1; i <=n; i++) {{split(annotation[i],splices,"|"); for(m = 3; m <=6; m++) {{if(max<splices[m]) {{max = splices[m]; anno = annotation[i]}}}}; }}; print $1,$2,$3,$4,$5,anno,max }}' - \
-			| awk -F"\t" 'BEGIN{{OFS="\t"}} NR==1 {{$7="spliceai_maxscore"; print $0}} NR>1 {{if ($6==".") {{$7="."; print $0}} else {{print $0}} }}' - \
-			| awk -F"\t" 'BEGIN{{OFS="\t"}} NR==1 {{$8="spliceai_rank"; print $0}} NR>1 {{ if ($7==".") {{$8 = 0}} else {{ if ($7 >= 0.8) {{$8 = 8}} else {{if ($7 >= 0.5) {{$8 = 6}} else {{if ($7 >= 0.2) {{$8 = 3}} else {{if ($7 >= 0.15) {{$8 = 1}} else {{$8 = 0}}}}}} }}}}; print $0}}' -  > {output.tsv_cut}
-		"""
+# localrules: spliceai_edit
+# rule spliceai_edit:
+# 	input:
+# 		vcf = 'temp/spliceai.{sample}__{region}.vcf.gz',
+# 		index = 'temp/spliceai.{sample}__{region}.vcf.gz.tbi'
+# 	output:
+# 	#	tsv = temp('temp/spliceai.{sample}__{region}.tsv'),
+# 		tsv_cut = temp('temp/spliceai.{sample}__{region}.tsv.cut')
+# 	#	index = temp('temp/spliceai.vt.{sample}__{region}.tsv.gz.tbi')
+# 	shell:
+# 	# use spliceai_vcfanno_v3.sh file for non-split files
+# 		"""
+# 	 	if [[ $(module list 2>&1 | grep "samtools" | wc -l) < 1 ]]; then module load {config[samtools_version]}; fi
+# 		bcftools query -H -f '%CHROM\t%POS\t%ID\t%REF\t%ALT\t%INFO/SpliceAI\n' {input.vcf} \
+# 			| sed -e '1 s/^#//' -e '1 s/\[[0-9]*\]//g' \
+# 			| awk -F"\t" 'BEGIN{{OFS="\t"}} !/,/ {{split($6, splices, "|"); max = splices[3]; for(m = 3; m <=6; m++) {{if(max<splices[m]) max = splices[m]}} print $0,max; next; }} /,/ {{n = split($6,annotation,","); max = 0; anno = annotation[1]; for (i = 1; i <=n; i++) {{split(annotation[i],splices,"|"); for(m = 3; m <=6; m++) {{if(max<splices[m]) {{max = splices[m]; anno = annotation[i]}}}}; }}; print $1,$2,$3,$4,$5,anno,max }}' - \
+# 			| awk -F"\t" 'BEGIN{{OFS="\t"}} NR==1 {{$7="spliceai_maxscore"; print $0}} NR>1 {{if ($6==".") {{$7="."; print $0}} else {{print $0}} }}' - \
+# 			| awk -F"\t" 'BEGIN{{OFS="\t"}} NR==1 {{$8="spliceai_rank"; print $0}} NR>1 {{ if ($7==".") {{$8 = 0}} else {{ if ($7 >= 0.8) {{$8 = 8}} else {{if ($7 >= 0.5) {{$8 = 6}} else {{if ($7 >= 0.2) {{$8 = 3}} else {{if ($7 >= 0.15) {{$8 = 1}} else {{$8 = 0}}}}}} }}}}; print $0}}' -  > {output.tsv_cut}
+# 		"""
 #Snakemake use {} as special wildcard, need to replace with {{}}.
 #Also better use double quotation marks "" instead of ''.
 #in sed, it appearst that \t needs to be \\t (or double quotations?)
@@ -704,33 +704,33 @@ rule spliceai_edit:
 # 		tabix -b 2 -e 2 -S 1 {output}
 # 		"""
 
-rule spliceai_intervar_edit:
-	input:
-		spliceai = 'temp/spliceai.{sample}__{region}.tsv.cut',
-		annovar = 'temp/{sample}__{region}.avinput.hg38_multianno.txt',
-		intervar = 'temp/{sample}__{region}.avinput.hg38_multianno.txt.intervar'
-	output:
-		intermediate = temp('temp/{sample}__{region}.avinput.hg38_multianno.modified.txt'),
-		spliceai_intervar = temp('temp/{sample}__{region}.spliceai_annovar_intervar'),
-		header = temp('temp/{sample}__{region}.annovar_intervar_header'),
-		gz = temp('temp/{sample}__{region}.spliceai_annovar_intervar_annotation.txt.gz'),
-		tbi = temp('temp/{sample}__{region}.spliceai_annovar_intervar_annotation.txt.gz.tbi')
-	shell:
-		"""
-		if [[ $(module list 2>&1 | grep "R/" | wc -l) < 1 ]]; then module load {config[R_version]}; fi
-		sed -e "1 s/avsnp147/avsnp150/" -e "s/^chr//" {input.annovar} \
-			> {output.intermediate}
-		Rscript {config[intervar_Rscript_path]} \
-			{input.intervar} \
-			{output.intermediate} \
-			{input.spliceai} \
-			{config[HGMDtranscript]} \
-			{output.spliceai_intervar}
-		if [[ $(module list 2>&1 | grep "samtools" | wc -l) < 1 ]]; then module load {config[samtools_version]}; fi
-		head -n 1 {output.spliceai_intervar} > {output.header}
-		tail -n +2 {output.spliceai_intervar} | sort -k1,1 -k2,2n | cat {output.header} - | bgzip -f > {output.gz}
-		tabix -b 2 -e 2 -S 1 {output.gz}
-		"""
+# rule spliceai_intervar_edit:
+# 	input:
+# 		spliceai = 'temp/spliceai.{sample}__{region}.tsv.cut',
+# 		annovar = 'temp/{sample}__{region}.avinput.hg38_multianno.txt',
+# 		intervar = 'temp/{sample}__{region}.avinput.hg38_multianno.txt.intervar'
+# 	output:
+# 		intermediate = temp('temp/{sample}__{region}.avinput.hg38_multianno.modified.txt'),
+# 		spliceai_intervar = temp('temp/{sample}__{region}.spliceai_annovar_intervar'),
+# 		header = temp('temp/{sample}__{region}.annovar_intervar_header'),
+# 		gz = temp('temp/{sample}__{region}.spliceai_annovar_intervar_annotation.txt.gz'),
+# 		tbi = temp('temp/{sample}__{region}.spliceai_annovar_intervar_annotation.txt.gz.tbi')
+# 	shell:
+# 		"""
+# 		if [[ $(module list 2>&1 | grep "R/" | wc -l) < 1 ]]; then module load {config[R_version]}; fi
+# 		sed -e "1 s/avsnp147/avsnp150/" -e "s/^chr//" {input.annovar} \
+# 			> {output.intermediate}
+# 		Rscript {config[intervar_Rscript_path]} \
+# 			{input.intervar} \
+# 			{output.intermediate} \
+# 			{input.spliceai} \
+# 			{config[HGMDtranscript]} \
+# 			{output.spliceai_intervar}
+# 		if [[ $(module list 2>&1 | grep "samtools" | wc -l) < 1 ]]; then module load {config[samtools_version]}; fi
+# 		head -n 1 {output.spliceai_intervar} > {output.header}
+# 		tail -n +2 {output.spliceai_intervar} | sort -k1,1 -k2,2n | cat {output.header} - | bgzip -f > {output.gz}
+# 		tabix -b 2 -e 2 -S 1 {output.gz}
+# 		"""
 
 #133 to 132 3/30/21
 # rule merge_annovar_intervar:
