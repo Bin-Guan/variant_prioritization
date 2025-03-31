@@ -90,8 +90,8 @@ wildcard_constraints:
 	region = '|'.join(REGIONS),
 #	region = '^[0-9a-zA-Z]+:\d+-\d+'
 #	family_name=family_name_con,
-	family_name = '|'.join(family_id),
-	sampleid = '|'.join(sample_id)
+	family_name = '|'.join(Family_Name),
+	sampleid = '|'.join(SampleID)
 
 if config['genomeBuild'].upper() in ['GRCH37', 'HG19']:
 	config['ref_genome'] = '/data/OGL/resources/1000G_phase2_GRCh37/human_g1k_v37_decoy.fasta'
