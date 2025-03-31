@@ -1,11 +1,14 @@
-input_vcf: 'test_trio.vcf.gz' #bcf also accepted.
+input_vcf: 'ChileMAC.fbDv.anno.vcf.gz' #bcf also accepted.
+# input_vcf: 'test_trio.vcf.gz' #bcf also accepted.
 gatk3: 'FALSE' # FALSE if using freebayes or deepvariant vcf.
 aaf_change: '1.1'
-output_type: ['vcf', 'geminiDB', 'family_query', 'individual_query'] #list, delete the component that is not needed, 'vcf' or blank for annotating a vcf file only
+output_type: ['family_query'] #list, delete the component that is not needed, 'vcf' or blank for annotating a vcf file only
+# output_type: ['vcf', 'geminiDB', 'family_query', 'individual_query'] #list, delete the component that is not needed, 'vcf' or blank for annotating a vcf file only
 NGS_genotype_calling: 'OGL' #OGL (default, inlcuding outputs other than SNV & small indel) OR vcf (only the vcf file is present)
 family_name: [] # empty list or One or more family names in the list ['family_1', 'family_2']. If it's blank and output_type includes family_query, then it will take ped file and make a family list.
 seeGEM: 'FALSE' #TRUE or FALSE
-ped: 'example.ped' # has to be \t delimited. Keep as is and cp the example.ped for vcf annotation only
+ped: 'ChileMAC.ped' # has to be \t delimited. Keep as is and cp the example.ped for vcf annotation only
+# ped: 'example.ped' # has to be \t delimited. Keep as is and cp the example.ped for vcf annotation only
 regions: '/home/$USER/git/variant_prioritization/src_hg38/vcf_region_split_chr_coords.txt' # hg19 version delete _hg38
 #regions, 1 for panel (only 1,2,..,22,X); "chr" for exome if needed;
 #regions, 25 or 100 for WGS of 50 cases. Use chr, 24, 99, 499 for genome.
