@@ -116,7 +116,7 @@ rule all:
 			ped=PEDfile, \
 			family_name=Family_Name, \
 			gemini_lenient = config['gemini_lenient']) if ('family_query' in config['output_type'] and config['seeGEM'].upper() == 'TRUE') else 'dummy.txt',
-		expand('gemini_xlsx/{family_name}.{sample}.{ped}.lenient{gemini_lenient}.xlsx', \
+		expand('gemini_xlsx/{sample}.{ped}.lenient{gemini_lenient}.xlsx', \
 			sample=SAMPLE, \
 			ped=PEDfile, \
 			family_name=Family_Name, \
