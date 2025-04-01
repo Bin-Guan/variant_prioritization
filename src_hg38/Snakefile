@@ -1121,7 +1121,7 @@ rule sortGeminiFamily:
 		xr = 'temp/{sample}.{ped}.xr.tsv',
 		# mendel_errors = 'temp/{sample}.{ped}.mendel_errors.tsv'
 	output:
-		xlsx = 'gemini_xlsx/{family_name}.{sample}.{ped}.lenient{gemini_lenient}.xlsx'
+		xlsx = 'gemini_xlsx/{sample}.{ped}.lenient{gemini_lenient}.xlsx'
 	shell:
 		"""
 		touch {output.xlsx}
