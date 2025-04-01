@@ -1202,29 +1202,29 @@ else:
 					;;
 			esac
 			"""
-
-localrules: sortGeminiFamily
-rule sortGeminiFamily:
-	input:
-		denovo = 'temp/{family_name}.{sample}.{ped}.denovo.tsv',
-		ad = 'temp/{family_name}.{sample}.{ped}.ad.tsv',
-		ar = 'temp/{family_name}.{sample}.{ped}.ar.tsv',
-		comphets = 'temp/{family_name}.{sample}.{ped}.comphets.tsv',
-		xdenovo = 'temp/{family_name}.{sample}.{ped}.xdenovo.tsv',
-		xd = 'temp/{family_name}.{sample}.{ped}.xd.tsv',
-		xr = 'temp/{family_name}.{sample}.{ped}.xr.tsv',
-		mendel_errors = 'temp/{family_name}.{sample}.{ped}.mendel_errors.tsv'
-	output:
-		xlsx = 'gemini_xlsx/{family_name}.{sample}.{ped}.lenient{gemini_lenient}.xlsx'
-	shell:
-		"""
-		if [[ $(module list 2>&1 | grep "R/" | wc -l) < 1 ]]; then module load {config[R_version]}; fi
-		Rscript /home/$USER/git/variant_prioritization/src_hg38/sortGeminiFamily.R \
-			{config[OGL_Dx_research_genes]} {config[aaf_change]} {output.xlsx} {wildcards.family_name} \
-			{input} \
-			{config[configuration_file]}
-		"""
-
+# temp
+# localrules: sortGeminiFamily
+# rule sortGeminiFamily:
+# 	input:
+# 		denovo = 'temp/{family_name}.{sample}.{ped}.denovo.tsv',
+# 		ad = 'temp/{family_name}.{sample}.{ped}.ad.tsv',
+# 		ar = 'temp/{family_name}.{sample}.{ped}.ar.tsv',
+# 		comphets = 'temp/{family_name}.{sample}.{ped}.comphets.tsv',
+# 		xdenovo = 'temp/{family_name}.{sample}.{ped}.xdenovo.tsv',
+# 		xd = 'temp/{family_name}.{sample}.{ped}.xd.tsv',
+# 		xr = 'temp/{family_name}.{sample}.{ped}.xr.tsv',
+# 		mendel_errors = 'temp/{family_name}.{sample}.{ped}.mendel_errors.tsv'
+# 	output:
+# 		xlsx = 'gemini_xlsx/{family_name}.{sample}.{ped}.lenient{gemini_lenient}.xlsx'
+# 	shell:
+# 		"""
+# 		if [[ $(module list 2>&1 | grep "R/" | wc -l) < 1 ]]; then module load {config[R_version]}; fi
+# 		Rscript /home/$USER/git/variant_prioritization/src_hg38/sortGeminiFamily.R \
+# 			{config[OGL_Dx_research_genes]} {config[aaf_change]} {output.xlsx} {wildcards.family_name} \
+# 			{input} \
+# 			{config[configuration_file]}
+# 		"""
+# temp
 # 1-2 hours for genome
 if config['datatype'].upper() in ["WGS", "GENOME", "EXOME", "WES"]:
 	rule query_gemini_individual:
