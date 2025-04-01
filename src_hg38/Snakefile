@@ -1066,137 +1066,49 @@ rule dummy:
 #		--skip-gene-tables --save-info-string needed? the size generated using load is 4x larger than vcf2db.py below, but the db file cannot be queried as before, probably only VEP fields are included.
 # 8/4/19:  --info-exclude MLEAF --info-exclude MLEAC because EU's exome data has 2 values in these two fields.
 #took 12 hours for a genome 4/12/21
-if config['datatype'].upper() in ["WGS", "GENOME"]:
 	rule query_gemini_family:
 		input:
 			vcf = '{sample}.SORTED.VT.VEP.VCFANNO.vcf.gz',
 			pedigree = "{ped}.ped"
 			# db = '{sample}.PED_{ped}.gemini.db'
 		output:
-			denovo = temp('temp/{family_name}.{sample}.{ped}.denovo.tsv'),
-			ad = temp('temp/{family_name}.{sample}.{ped}.ad.tsv'),
-			ar = temp('temp/{family_name}.{sample}.{ped}.ar.tsv'),
-			comphets = temp('temp/{family_name}.{sample}.{ped}.comphets.tsv'),
-			xdenovo = temp('temp/{family_name}.{sample}.{ped}.xdenovo.tsv'),
-			xd = temp('temp/{family_name}.{sample}.{ped}.xd.tsv'),
-			xr = temp('temp/{family_name}.{sample}.{ped}.xr.tsv'),
-			# mendel_errors = temp('temp/{family_name}.{sample}.{ped}.mendel_errors.tsv')
+			denovo = temp('temp/{sample}.{ped}.denovo.tsv'),
+			ad = temp('temp/{sample}.{ped}.ad.tsv'),
+			ar = temp('temp/{sample}.{ped}.ar.tsv'),
+			comphets = temp('temp/{sample}.{ped}.comphets.tsv'),
+			xdenovo = temp('temp/{sample}.{ped}.xdenovo.tsv'),
+			xd = temp('temp/{sample}.{ped}.xd.tsv'),
+			xr = temp('temp/{sample}.{ped}.xr.tsv'),
+			# mendel_errors = temp('temp/{sample}.{ped}.mendel_errors.tsv')
 		shell:
 			"""
-			module load {config[samtools_version]} {config[slivar_version]} {config[R_version]}
+			module load {config[slivar_version]} {config[R_version]}
 			cp {input} /lscratch/$SLURM_JOB_ID/.
-			mkdir -p /lscratch/$SLURM_JOB_ID/{wildcards.family_name}
-			WKDIR=/lscratch/$SLURM_JOB_ID/{wildcards.family_name}
+			mkdir -p /lscratch/$SLURM_JOB_ID
+			WKDIR=/lscratch/$SLURM_JOB_ID
 			LENIENT={config[gemini_lenient]}
 			case "${{LENIENT^^}}" in
 				"YES"|"TRUE")
-					time gemini de_novo -d 9 --min-gq 5 --lenient --filter "priority_score > 3" --families {wildcards.family_name} /lscratch/$SLURM_JOB_ID/{input} > {output.denovo}
-					time gemini autosomal_dominant -d 9 --min-gq 5 --filter "priority_score > 3" --families {wildcards.family_name} /lscratch/$SLURM_JOB_ID/{input} > {output.ad}
-					time gemini autosomal_recessive -d 9 --min-gq 5 --lenient --filter "priority_score > 3" --families {wildcards.family_name} /lscratch/$SLURM_JOB_ID/{input} > {output.ar}
-					time gemini comp_hets -d 9 --min-gq 5 --gene-where "priority_score >= 6" --families {wildcards.family_name} /lscratch/$SLURM_JOB_ID/{input} > {output.comphets}
-					time gemini x_linked_de_novo -d 9 --min-gq 5 --filter "priority_score > 3" --families {wildcards.family_name} /lscratch/$SLURM_JOB_ID/{input} > {output.xdenovo}
-					time gemini x_linked_dominant -d 9 --min-gq 5 --filter "priority_score > 3" --families {wildcards.family_name} /lscratch/$SLURM_JOB_ID/{input} > {output.xd}
-					time gemini x_linked_recessive -d 9 --min-gq 5 --filter "priority_score > 3" --families {wildcards.family_name} /lscratch/$SLURM_JOB_ID/{input} > {output.xr}
+					touch {output.denovo}
+					touch {output.ad}
+					touch {output.ar}
+					touch {output.comphets}
+					touch {output.xdenovo}
+					touch {output.xd}
+					touch {output.xr}
 					;;
 				*)
-					time gemini de_novo -d 9 --min-gq 5 --filter "priority_score > 4" --families {wildcards.family_name} /lscratch/$SLURM_JOB_ID/{input} > {output.denovo}
-					time gemini autosomal_dominant -d 9 --min-gq 5 --filter "priority_score > 4" --families {wildcards.family_name} /lscratch/$SLURM_JOB_ID/{input} > {output.ad}
-					time gemini autosomal_recessive -d 9 --min-gq 5 --filter "priority_score > 4" --families {wildcards.family_name} /lscratch/$SLURM_JOB_ID/{input} > {output.ar}
-					time gemini comp_hets -d 9 --min-gq 5 --gene-where "priority_score >= 6" --families {wildcards.family_name} /lscratch/$SLURM_JOB_ID/{input} > {output.comphets}
-					time gemini x_linked_de_novo -d 9 --min-gq 5 --filter "priority_score > 4" --families {wildcards.family_name} /lscratch/$SLURM_JOB_ID/{input} > {output.xdenovo}
-					time gemini x_linked_dominant -d 9 --min-gq 5 --filter "priority_score > 4" --families {wildcards.family_name} /lscratch/$SLURM_JOB_ID/{input} > {output.xd}
-					time gemini x_linked_recessive -d 9 --min-gq 5 --filter "priority_score > 4" --families {wildcards.family_name} /lscratch/$SLURM_JOB_ID/{input} > {output.xr}
+					touch {output.denovo}
+					touch {output.ad}
+					touch {output.ar}
+					touch {output.comphets}
+					touch {output.xdenovo}
+					touch {output.xd}
+					touch {output.xr}
 					;;
 			esac
 			"""
-elif config['datatype'].upper() in ["EXOME", "WES"]:
-		rule query_gemini_family:
-			input:
-				vcf = '{sample}.SORTED.VT.VEP.VCFANNO.vcf.gz',
-				pedigree = "{ped}.ped"
-				# db = '{sample}.PED_{ped}.gemini.db'
-			output:
-				denovo = temp('temp/{family_name}.{sample}.{ped}.denovo.tsv'),
-				ad = temp('temp/{family_name}.{sample}.{ped}.ad.tsv'),
-				ar = temp('temp/{family_name}.{sample}.{ped}.ar.tsv'),
-				comphets = temp('temp/{family_name}.{sample}.{ped}.comphets.tsv'),
-				xdenovo = temp('temp/{family_name}.{sample}.{ped}.xdenovo.tsv'),
-				xd = temp('temp/{family_name}.{sample}.{ped}.xd.tsv'),
-				xr = temp('temp/{family_name}.{sample}.{ped}.xr.tsv'),
-				# mendel_errors = temp('temp/{family_name}.{sample}.{ped}.mendel_errors.tsv')
-			shell:
-				"""
-				module load {config[samtools_version]} {config[slivar_version]} {config[R_version]}
-				cp {input} /lscratch/$SLURM_JOB_ID/.
-				mkdir -p /lscratch/$SLURM_JOB_ID/{wildcards.family_name}
-				WKDIR=/lscratch/$SLURM_JOB_ID/{wildcards.family_name}
-				LENIENT={config[gemini_lenient]}
-				case "${{LENIENT^^}}" in
-					"YES"|"TRUE")
-						time gemini de_novo -d 9 --min-gq 5 --lenient --filter "priority_score >= 3" --families {wildcards.family_name} /lscratch/$SLURM_JOB_ID/{input} > {output.denovo}
-						time gemini autosomal_dominant -d 9 --min-gq 5 --filter "priority_score >= 3" --families {wildcards.family_name} /lscratch/$SLURM_JOB_ID/{input} > {output.ad}
-						time gemini autosomal_recessive -d 9 --min-gq 5 --lenient --filter "priority_score >= 3" --families {wildcards.family_name} /lscratch/$SLURM_JOB_ID/{input} > {output.ar}
-						time gemini comp_hets -d 9 --min-gq 5 --gene-where "priority_score >= 4" --families {wildcards.family_name} /lscratch/$SLURM_JOB_ID/{input} > {output.comphets}
-						time gemini x_linked_de_novo -d 9 --min-gq 5 --filter "priority_score >= 3" --families {wildcards.family_name} /lscratch/$SLURM_JOB_ID/{input} > {output.xdenovo}
-						time gemini x_linked_dominant -d 9 --min-gq 5 --filter "priority_score >= 3" --families {wildcards.family_name} /lscratch/$SLURM_JOB_ID/{input} > {output.xd}
-						time gemini x_linked_recessive -d 9 --min-gq 5 --filter "priority_score >= 3" --families {wildcards.family_name} /lscratch/$SLURM_JOB_ID/{input} > {output.xr}
-						;;
-					*)
-						time gemini de_novo -d 9 --min-gq 5 --filter "priority_score >= 3" --families {wildcards.family_name} /lscratch/$SLURM_JOB_ID/{input} > {output.denovo}
-						time gemini autosomal_dominant -d 9 --min-gq 5 --filter "priority_score >= 3" --families {wildcards.family_name} /lscratch/$SLURM_JOB_ID/{input} > {output.ad}
-						time gemini autosomal_recessive -d 9 --min-gq 5 --filter "priority_score >= 3" --families {wildcards.family_name} /lscratch/$SLURM_JOB_ID/{input} > {output.ar}
-						time gemini comp_hets -d 9 --min-gq 5 --gene-where "priority_score >= 4" --families {wildcards.family_name} /lscratch/$SLURM_JOB_ID/{input} > {output.comphets}
-						time gemini x_linked_de_novo -d 9 --min-gq 5 --filter "priority_score >= 3" --families {wildcards.family_name} /lscratch/$SLURM_JOB_ID/{input} > {output.xdenovo}
-						time gemini x_linked_dominant -d 9 --min-gq 5 --filter "priority_score >= 3" --families {wildcards.family_name} /lscratch/$SLURM_JOB_ID/{input} > {output.xd}
-						time gemini x_linked_recessive -d 9 --min-gq 5 --filter "priority_score >= 3" --families {wildcards.family_name} /lscratch/$SLURM_JOB_ID/{input} > {output.xr}
-						;;
-				esac
-				"""
-else:
-	localrules: query_gemini_family
-	rule query_gemini_family:
-		input:
-			vcf = '{sample}.SORTED.VT.VEP.VCFANNO.vcf.gz',
-			pedigree = "{ped}.ped"
-			# db = '{sample}.PED_{ped}.gemini.db'
-		output:
-			denovo = temp('temp/{family_name}.{sample}.{ped}.denovo.tsv'),
-			ad = temp('temp/{family_name}.{sample}.{ped}.ad.tsv'),
-			ar = temp('temp/{family_name}.{sample}.{ped}.ar.tsv'),
-			comphets = temp('temp/{family_name}.{sample}.{ped}.comphets.tsv'),
-			xdenovo = temp('temp/{family_name}.{sample}.{ped}.xdenovo.tsv'),
-			xd = temp('temp/{family_name}.{sample}.{ped}.xd.tsv'),
-			xr = temp('temp/{family_name}.{sample}.{ped}.xr.tsv'),
-			# mendel_errors = temp('temp/{family_name}.{sample}.{ped}.mendel_errors.tsv')
-		resources: res=1
-		shell:
-			"""
-			if [[ $(module list 2>&1 | grep "slivar" | wc -l) < 1 ]]; then module load {config[slivar_version]}; fi
-			if [[ $(module list 2>&1 | grep "samtools" | wc -l) < 1 ]]; then module load {config[samtools_version]}; fi
-			mkdir -p /lscratch/$SLURM_JOB_ID/{wildcards.family_name}
-			WKDIR=/lscratch/$SLURM_JOB_ID/{wildcards.family_name}
-			LENIENT={config[gemini_lenient]}
-			case "${{LENIENT^^}}" in
-				"YES"|"TRUE")
-					time gemini de_novo -d 9 --min-gq 5 --lenient --filter "priority_score >= 3" --families {wildcards.family_name} {input} > {output.denovo}
-					time gemini autosomal_dominant -d 9 --min-gq 5 --filter "priority_score >= 3" --families {wildcards.family_name} {input} > {output.ad}
-					time gemini autosomal_recessive -d 9 --min-gq 5 --lenient --filter "priority_score >= 3" --families {wildcards.family_name} {input} > {output.ar}
-					time gemini comp_hets -d 9 --min-gq 5 --gene-where "priority_score >= 4" --families {wildcards.family_name} {input} > {output.comphets}
-					time gemini x_linked_de_novo -d 9 --min-gq 5 --filter "priority_score >= 3" --families {wildcards.family_name} {input} > {output.xdenovo}
-					time gemini x_linked_dominant -d 9 --min-gq 5 --filter "priority_score >= 3" --families {wildcards.family_name} {input} > {output.xd}
-					time gemini x_linked_recessive -d 9 --min-gq 5 --filter "priority_score >= 3" --families {wildcards.family_name} {input} > {output.xr}
-					;;
-				*)
-					time gemini de_novo -d 9 --min-gq 5 --filter "priority_score >= 3" --families {wildcards.family_name} {input} > {output.denovo}
-					time gemini autosomal_dominant -d 9 --min-gq 5 --filter "priority_score >= 3" --families {wildcards.family_name} {input} > {output.ad}
-					time gemini autosomal_recessive -d 9 --min-gq 5 --filter "priority_score >= 3" --families {wildcards.family_name} {input} > {output.ar}
-					time gemini comp_hets -d 9 --min-gq 5 --gene-where "priority_score >= 4" --families {wildcards.family_name} {input} > {output.comphets}
-					time gemini x_linked_de_novo -d 9 --min-gq 5 --filter "priority_score >= 3" --families {wildcards.family_name} {input} > {output.xdenovo}
-					time gemini x_linked_dominant -d 9 --min-gq 5 --filter "priority_score >= 3" --families {wildcards.family_name} {input} > {output.xd}
-					time gemini x_linked_recessive -d 9 --min-gq 5 --filter "priority_score >= 3" --families {wildcards.family_name} {input} > {output.xr}
-					;;
-			esac
-			"""
+
 localrules: sortGeminiFamily
 rule sortGeminiFamily:
 	input:
