@@ -1066,48 +1066,48 @@ rule dummy:
 #		--skip-gene-tables --save-info-string needed? the size generated using load is 4x larger than vcf2db.py below, but the db file cannot be queried as before, probably only VEP fields are included.
 # 8/4/19:  --info-exclude MLEAF --info-exclude MLEAC because EU's exome data has 2 values in these two fields.
 #took 12 hours for a genome 4/12/21
-	rule query_gemini_family:
-		input:
-			vcf = '{sample}.SORTED.VT.VEP.VCFANNO.vcf.gz',
-			pedigree = "{ped}.ped"
-			# db = '{sample}.PED_{ped}.gemini.db'
-		output:
-			denovo = temp('temp/{sample}.{ped}.denovo.tsv'),
-			ad = temp('temp/{sample}.{ped}.ad.tsv'),
-			ar = temp('temp/{sample}.{ped}.ar.tsv'),
-			comphets = temp('temp/{sample}.{ped}.comphets.tsv'),
-			xdenovo = temp('temp/{sample}.{ped}.xdenovo.tsv'),
-			xd = temp('temp/{sample}.{ped}.xd.tsv'),
-			xr = temp('temp/{sample}.{ped}.xr.tsv'),
-			# mendel_errors = temp('temp/{sample}.{ped}.mendel_errors.tsv')
-		shell:
-			"""
-			module load {config[slivar_version]} {config[R_version]}
-			cp {input} /lscratch/$SLURM_JOB_ID/.
-			mkdir -p /lscratch/$SLURM_JOB_ID
-			WKDIR=/lscratch/$SLURM_JOB_ID
-			LENIENT={config[gemini_lenient]}
-			case "${{LENIENT^^}}" in
-				"YES"|"TRUE")
-					touch {output.denovo}
-					touch {output.ad}
-					touch {output.ar}
-					touch {output.comphets}
-					touch {output.xdenovo}
-					touch {output.xd}
-					touch {output.xr}
-					;;
-				*)
-					touch {output.denovo}
-					touch {output.ad}
-					touch {output.ar}
-					touch {output.comphets}
-					touch {output.xdenovo}
-					touch {output.xd}
-					touch {output.xr}
-					;;
-			esac
-			"""
+rule query_gemini_family:
+	input:
+		vcf = '{sample}.SORTED.VT.VEP.VCFANNO.vcf.gz',
+		pedigree = "{ped}.ped"
+		# db = '{sample}.PED_{ped}.gemini.db'
+	output:
+		denovo = temp('temp/{sample}.{ped}.denovo.tsv'),
+		ad = temp('temp/{sample}.{ped}.ad.tsv'),
+		ar = temp('temp/{sample}.{ped}.ar.tsv'),
+		comphets = temp('temp/{sample}.{ped}.comphets.tsv'),
+		xdenovo = temp('temp/{sample}.{ped}.xdenovo.tsv'),
+		xd = temp('temp/{sample}.{ped}.xd.tsv'),
+		xr = temp('temp/{sample}.{ped}.xr.tsv'),
+		# mendel_errors = temp('temp/{sample}.{ped}.mendel_errors.tsv')
+	shell:
+		"""
+		module load {config[slivar_version]} {config[R_version]}
+		cp {input} /lscratch/$SLURM_JOB_ID/.
+		mkdir -p /lscratch/$SLURM_JOB_ID
+		WKDIR=/lscratch/$SLURM_JOB_ID
+		LENIENT={config[gemini_lenient]}
+		case "${{LENIENT^^}}" in
+			"YES"|"TRUE")
+				touch {output.denovo}
+				touch {output.ad}
+				touch {output.ar}
+				touch {output.comphets}
+				touch {output.xdenovo}
+				touch {output.xd}
+				touch {output.xr}
+				;;
+			*)
+				touch {output.denovo}
+				touch {output.ad}
+				touch {output.ar}
+				touch {output.comphets}
+				touch {output.xdenovo}
+				touch {output.xd}
+				touch {output.xr}
+				;;
+		esac
+		"""
 
 localrules: sortGeminiFamily
 rule sortGeminiFamily:
