@@ -1069,7 +1069,8 @@ rule dummy:
 if config['datatype'].upper() in ["WGS", "GENOME"]:
 	rule query_gemini_family:
 		input:
-			db = '{sample}.PED_{ped}.gemini.db'
+			vcf = '{sample}.SORTED.VT.VEP.VCFANNO.vcf.gz'
+			# db = '{sample}.PED_{ped}.gemini.db'
 		output:
 			denovo = temp('temp/{family_name}.{sample}.{ped}.denovo.tsv'),
 			ad = temp('temp/{family_name}.{sample}.{ped}.ad.tsv'),
@@ -1112,7 +1113,8 @@ if config['datatype'].upper() in ["WGS", "GENOME"]:
 elif config['datatype'].upper() in ["EXOME", "WES"]:
 		rule query_gemini_family:
 			input:
-				db = '{sample}.PED_{ped}.gemini.db'
+				vcf = '{sample}.SORTED.VT.VEP.VCFANNO.vcf.gz'
+				# db = '{sample}.PED_{ped}.gemini.db'
 			output:
 				denovo = temp('temp/{family_name}.{sample}.{ped}.denovo.tsv'),
 				ad = temp('temp/{family_name}.{sample}.{ped}.ad.tsv'),
@@ -1156,7 +1158,8 @@ else:
 	localrules: query_gemini_family
 	rule query_gemini_family:
 		input:
-			db = '{sample}.PED_{ped}.gemini.db'
+			vcf = '{sample}.SORTED.VT.VEP.VCFANNO.vcf.gz'
+			# db = '{sample}.PED_{ped}.gemini.db'
 		output:
 			denovo = temp('temp/{family_name}.{sample}.{ped}.denovo.tsv'),
 			ad = temp('temp/{family_name}.{sample}.{ped}.ad.tsv'),
