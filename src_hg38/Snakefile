@@ -1069,7 +1069,8 @@ rule dummy:
 if config['datatype'].upper() in ["WGS", "GENOME"]:
 	rule query_gemini_family:
 		input:
-			vcf = '{sample}.SORTED.VT.VEP.VCFANNO.vcf.gz'
+			vcf = '{sample}.SORTED.VT.VEP.VCFANNO.vcf.gz',
+			pedigree = "{PEDbase}{wildcards.ped}.ped"
 			# db = '{sample}.PED_{ped}.gemini.db'
 		output:
 			denovo = temp('temp/{family_name}.{sample}.{ped}.denovo.tsv'),
@@ -1113,7 +1114,8 @@ if config['datatype'].upper() in ["WGS", "GENOME"]:
 elif config['datatype'].upper() in ["EXOME", "WES"]:
 		rule query_gemini_family:
 			input:
-				vcf = '{sample}.SORTED.VT.VEP.VCFANNO.vcf.gz'
+				vcf = '{sample}.SORTED.VT.VEP.VCFANNO.vcf.gz',
+				pedigree = "{PEDbase}{wildcards.ped}.ped"
 				# db = '{sample}.PED_{ped}.gemini.db'
 			output:
 				denovo = temp('temp/{family_name}.{sample}.{ped}.denovo.tsv'),
@@ -1158,7 +1160,8 @@ else:
 	localrules: query_gemini_family
 	rule query_gemini_family:
 		input:
-			vcf = '{sample}.SORTED.VT.VEP.VCFANNO.vcf.gz'
+			vcf = '{sample}.SORTED.VT.VEP.VCFANNO.vcf.gz',
+			pedigree = "{PEDbase}{wildcards.ped}.ped"
 			# db = '{sample}.PED_{ped}.gemini.db'
 		output:
 			denovo = temp('temp/{family_name}.{sample}.{ped}.denovo.tsv'),
@@ -1226,7 +1229,8 @@ rule sortGeminiFamily:
 if config['datatype'].upper() in ["WGS", "GENOME", "EXOME", "WES"]:
 	rule query_gemini_individual:
 		input:
-			db = '{sample}.PED_{ped}.gemini.db'
+			vcf = '{sample}.SORTED.VT.VEP.VCFANNO.vcf.gz',
+			pedigree = "{PEDbase}{wildcards.ped}.ped"
 		output:
 			tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.tsv',
 			ref_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.ref.tsv'
@@ -1245,7 +1249,8 @@ else:
 	localrules: query_gemini_individual
 	rule query_gemini_individual:
 		input:
-			db = '{sample}.PED_{ped}.gemini.db'
+			vcf = '{sample}.SORTED.VT.VEP.VCFANNO.vcf.gz',
+			pedigree = "{PEDbase}{wildcards.ped}.ped"
 		output:
 			tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.tsv',
 			ref_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.ref.tsv'
