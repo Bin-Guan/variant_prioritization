@@ -19,6 +19,10 @@
 		"mem" : "16g",
 		"extra" : "--gres=lscratch:150"
 	},
+	"squirls" :
+	{
+		"extra" : "--gres=lscratch:100"
+	},
 	"spliceai_wrapper" :
   {
     "partition" : "gpu",
