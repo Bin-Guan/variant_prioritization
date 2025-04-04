@@ -1083,9 +1083,9 @@ rule query_gemini_family:
 	shell:
 		"""
 		module load {config[slivar_version]} {config[R_version]}
-		mkdir -p /lscratch/$SLURM_JOB_ID
-		cp {input} /lscratch/$SLURM_JOB_ID/.
-		WKDIR=/lscratch/$SLURM_JOB_ID
+		# mkdir -p /lscratch/$SLURM_JOB_ID
+		# cp {input} /lscratch/$SLURM_JOB_ID/.
+		# WKDIR=/lscratch/$SLURM_JOB_ID
 		LENIENT={config[gemini_lenient]}
 		case "${{LENIENT^^}}" in
 			"YES"|"TRUE")
