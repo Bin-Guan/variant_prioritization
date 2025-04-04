@@ -1103,7 +1103,7 @@ rule query_gemini_family:
 				--family-expr 'x_denovo:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_denovo_x)' \
 				--family-expr 'x_dominant:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_dominant_x)' \
 				--family-expr 'x_recessive:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_recessive_x)' \
-				-o {ped}.gemini_family.bcf
+				-o {wildcards.ped}.gemini_family.bcf
 
 				touch {output.denovo}
 				touch {output.ad}
@@ -1128,7 +1128,7 @@ rule query_gemini_family:
 				--family-expr 'x_denovo:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_denovo_x)' \
 				--family-expr 'x_dominant:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_dominant_x)' \
 				--family-expr 'x_recessive:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_recessive_x)' \
-				-o {ped}.gemini_family.bcf
+				-o {wildcards.ped}.gemini_family.bcf
 
 				touch {output.denovo}
 				touch {output.ad}
