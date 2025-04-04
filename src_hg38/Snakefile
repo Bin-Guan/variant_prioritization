@@ -1069,7 +1069,7 @@ rule dummy:
 rule query_gemini_family:
 	input:
 		vcf = '{sample}.SORTED.VT.VEP.VCFANNO.vcf.gz',
-		pedigree = "{ped}.ped"
+		pedigree = "{sample}.ped"
 		# db = '{sample}.PED_{ped}.gemini.db'
 	output:
 		bcf = "{sample}.bcf",
