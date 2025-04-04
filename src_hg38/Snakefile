@@ -1091,7 +1091,7 @@ rule query_gemini_family:
 			"YES"|"TRUE")
 				time \
 				slivar expr \
-				--js ${SLIVAR_HOME}/js/slivar-functions.js \
+				--js ${{SLIVAR_HOME}}/js/slivar-functions.js \
 				--vcf /data/${USER}/{input.vcf} \
 				--ped /data/${USER}/{input.pedigree} \
 				--pass-only \
@@ -1116,7 +1116,7 @@ rule query_gemini_family:
 			*)
 				time \
 				slivar expr \
-				--js ${SLIVAR_HOME}/js/slivar-functions.js \
+				--js ${{SLIVAR_HOME}}/js/slivar-functions.js \
 				--vcf /data/${USER}/{input.vcf} \
 				--ped /data/${USER}/{input.pedigree} \
 				--pass-only \
