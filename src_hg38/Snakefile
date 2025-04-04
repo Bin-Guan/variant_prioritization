@@ -1072,7 +1072,7 @@ rule query_gemini_family:
 		pedigree = "{ped}.ped"
 		# db = '{sample}.PED_{ped}.gemini.db'
 	output:
-		bcf = {ped}.bcf
+		bcf = {ped}.bcf,
 		denovo = temp('temp/{sample}.{ped}.denovo.tsv'),
 		ad = temp('temp/{sample}.{ped}.ad.tsv'),
 		ar = temp('temp/{sample}.{ped}.ar.tsv'),
