@@ -1075,21 +1075,21 @@ rule query_slivar_sample:
 	shell:
 		"""
 		module load {config[slivar_version]}
-		time \
-		slivar expr \
-		--js ${{SLIVAR_HOME}}/js/slivar-functions.js \
-		--vcf {input.vcf} \
-		--ped {input.pedigree} \
-		--pass-only \
-		--info 'variant.FILTER == "PASS" && variant.ALT[0] != "*"' \
-		--family-expr 'denovo:fam.every(segregating_denovo)' \
-		--family-expr 'dominant:fam.every(segregating_dominant)' \
-		--family-expr 'recessive:fam.every(segregating_recessive)' \
-		--trio 'comphet_side:comphet_side(kid, mom, dad)' \
-		--family-expr 'x_denovo:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_denovo_x)' \
-		--family-expr 'x_dominant:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_dominant_x)' \
-		--family-expr 'x_recessive:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_recessive_x)' \
-		-o {output.bcf}
+			time \
+			slivar expr \
+			--js ${{SLIVAR_HOME}}/js/slivar-functions.js \
+			--vcf {input.vcf} \
+			--ped {input.pedigree} \
+			--pass-only \
+			--info 'variant.FILTER == "PASS" && variant.ALT[0] != "*"' \
+			--family-expr 'denovo:fam.every(segregating_denovo)' \
+			--family-expr 'dominant:fam.every(segregating_dominant)' \
+			--family-expr 'recessive:fam.every(segregating_recessive)' \
+			--trio 'comphet_side:comphet_side(kid, mom, dad)' \
+			--family-expr 'x_denovo:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_denovo_x)' \
+			--family-expr 'x_dominant:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_dominant_x)' \
+			--family-expr 'x_recessive:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_recessive_x)' \
+			-o {output.bcf}
 		"""
 
 rule query_gemini_family:
@@ -1110,13 +1110,13 @@ rule query_gemini_family:
 		# mkdir -p /lscratch/$SLURM_JOB_ID
 		# cp {input} /lscratch/$SLURM_JOB_ID/.
 		# WKDIR=/lscratch/$SLURM_JOB_ID
-		touch {output.denovo}
-		touch {output.ad}
-		touch {output.ar}
-		touch {output.comphets}
-		touch {output.xdenovo}
-		touch {output.xd}
-		touch {output.xr}
+			touch {output.denovo}
+			touch {output.ad}
+			touch {output.ar}
+			touch {output.comphets}
+			touch {output.xdenovo}
+			touch {output.xd}
+			touch {output.xr}
 		"""
 
 localrules: sortGeminiFamily
