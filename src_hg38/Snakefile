@@ -1092,7 +1092,7 @@ rule query_slivar_sample:
 			-o {output.bcf}
 		"""
 
-rule query_gemini_family:
+rule filter_sliver_family:
 	input:
 		bcf = "{sample}.{ped}.bcf"
 	output:
