@@ -1092,31 +1092,18 @@ rule query_slivar_sample:
 			-o {output.bcf}
 		"""
 
-rule filter_sliver_family:
+rule filter_slivar_family:
 	input:
 		bcf = "{sample}.{ped}.bcf"
 	output:
-		denovo = temp('temp/{sample}.{ped}.denovo.tsv'),
-		ad = temp('temp/{sample}.{ped}.ad.tsv'),
-		ar = temp('temp/{sample}.{ped}.ar.tsv'),
-		comphets = temp('temp/{sample}.{ped}.comphets.tsv'),
-		xdenovo = temp('temp/{sample}.{ped}.xdenovo.tsv'),
-		xd = temp('temp/{sample}.{ped}.xd.tsv'),
-		xr = temp('temp/{sample}.{ped}.xr.tsv'),
-		# mendel_errors = temp('temp/{sample}.{ped}.mendel_errors.tsv')
+		bcf = temp('temp/{family_name}.{sample}.{ped}.bcf')
 	shell:
 		"""
 		module load {config[slivar_version]} {config[R_version]}
 		# mkdir -p /lscratch/$SLURM_JOB_ID
 		# cp {input} /lscratch/$SLURM_JOB_ID/.
 		# WKDIR=/lscratch/$SLURM_JOB_ID
-			touch {output.denovo}
-			touch {output.ad}
-			touch {output.ar}
-			touch {output.comphets}
-			touch {output.xdenovo}
-			touch {output.xd}
-			touch {output.xr}
+			touch {output.bcf}
 		"""
 
 localrules: sortGeminiFamily
