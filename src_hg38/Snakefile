@@ -1119,60 +1119,60 @@ rule filter_sliver_family:
 			touch {output.xr}
 		"""
 
-localrules: sortGeminiFamily
-rule sortGeminiFamily:
-	input:
-		denovo = 'temp/{sample}.{ped}.denovo.tsv',
-		ad = 'temp/{sample}.{ped}.ad.tsv',
-		ar = 'temp/{sample}.{ped}.ar.tsv',
-		comphets = 'temp/{sample}.{ped}.comphets.tsv',
-		xdenovo = 'temp/{sample}.{ped}.xdenovo.tsv',
-		xd = 'temp/{sample}.{ped}.xd.tsv',
-		xr = 'temp/{sample}.{ped}.xr.tsv',
-		# mendel_errors = 'temp/{sample}.{ped}.mendel_errors.tsv'
-	output:
-		xlsx = 'gemini_xlsx/{sample}.{ped}.lenient{gemini_lenient}.xlsx'
-	shell:
-		"""
-		touch {output.xlsx}
-		"""
-		# temp
-		# if [[ $(module list 2>&1 | grep "R/" | wc -l) < 1 ]]; then module load {config[R_version]}; fi
-		# Rscript /home/$USER/git/variant_prioritization/src_hg38/sortGeminiFamily.R \
-		# 	{config[OGL_Dx_research_genes]} {config[aaf_change]} {output.xlsx} {wildcards.family_name} \
-		# 	{input} \
-		# 	{config[configuration_file]}
-		# temp
+# localrules: sortGeminiFamily
+# rule sortGeminiFamily:
+# 	input:
+# 		denovo = 'temp/{sample}.{ped}.denovo.tsv',
+# 		ad = 'temp/{sample}.{ped}.ad.tsv',
+# 		ar = 'temp/{sample}.{ped}.ar.tsv',
+# 		comphets = 'temp/{sample}.{ped}.comphets.tsv',
+# 		xdenovo = 'temp/{sample}.{ped}.xdenovo.tsv',
+# 		xd = 'temp/{sample}.{ped}.xd.tsv',
+# 		xr = 'temp/{sample}.{ped}.xr.tsv',
+# 		# mendel_errors = 'temp/{sample}.{ped}.mendel_errors.tsv'
+# 	output:
+# 		xlsx = 'gemini_xlsx/{sample}.{ped}.lenient{gemini_lenient}.xlsx'
+# 	shell:
+# 		"""
+# 		touch {output.xlsx}
+# 		"""
+# 		# temp
+# 		# if [[ $(module list 2>&1 | grep "R/" | wc -l) < 1 ]]; then module load {config[R_version]}; fi
+# 		# Rscript /home/$USER/git/variant_prioritization/src_hg38/sortGeminiFamily.R \
+# 		# 	{config[OGL_Dx_research_genes]} {config[aaf_change]} {output.xlsx} {wildcards.family_name} \
+# 		# 	{input} \
+# 		# 	{config[configuration_file]}
+# 		# temp
 
-# 1-2 hours for genome
-if config['datatype'].upper() in ["WGS", "GENOME", "EXOME", "WES"]:
-	rule query_gemini_individual:
-		input:
-			vcf = '{sample}.SORTED.VT.VEP.VCFANNO.vcf.gz',
-			pedigree = "{ped}.ped"
-		output:
-			tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.tsv',
-			ref_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.ref.tsv'
-		shell:
-			"""
-			module load {config[slivar_version]}
-			cp {input.vcf} /lscratch/$SLURM_JOB_ID/.
-			cp {input.pedigree} /lscratch/$SLURM_JOB_ID/.
-			"""
-else:
-	localrules: query_gemini_individual
-	rule query_gemini_individual:
-		input:
-			vcf = '{sample}.SORTED.VT.VEP.VCFANNO.vcf.gz',
-			pedigree = "{ped}.ped"
-		output:
-			tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.tsv',
-			ref_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.ref.tsv'
-		resources: res=1
-		shell:
-			"""
-			if [[ $(module list 2>&1 | grep "slivar" | wc -l) < 1 ]]; then module load {config[slivar_version]}; fi
-			"""
+# # 1-2 hours for genome
+# if config['datatype'].upper() in ["WGS", "GENOME", "EXOME", "WES"]:
+# 	rule query_gemini_individual:
+# 		input:
+# 			vcf = '{sample}.SORTED.VT.VEP.VCFANNO.vcf.gz',
+# 			pedigree = "{ped}.ped"
+# 		output:
+# 			tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.tsv',
+# 			ref_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.ref.tsv'
+# 		shell:
+# 			"""
+# 			module load {config[slivar_version]}
+# 			cp {input.vcf} /lscratch/$SLURM_JOB_ID/.
+# 			cp {input.pedigree} /lscratch/$SLURM_JOB_ID/.
+# 			"""
+# else:
+# 	localrules: query_gemini_individual
+# 	rule query_gemini_individual:
+# 		input:
+# 			vcf = '{sample}.SORTED.VT.VEP.VCFANNO.vcf.gz',
+# 			pedigree = "{ped}.ped"
+# 		output:
+# 			tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.tsv',
+# 			ref_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.ref.tsv'
+# 		resources: res=1
+# 		shell:
+# 			"""
+# 			if [[ $(module list 2>&1 | grep "slivar" | wc -l) < 1 ]]; then module load {config[slivar_version]}; fi
+# 			"""
 
 
 #--gt-filter "gt_types.{wildcards.sampleid}  == HET OR gt_types.{wildcards.sampleid}  == HOM_ALT" equals to but faster than
