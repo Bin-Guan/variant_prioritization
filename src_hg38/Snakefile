@@ -1066,13 +1066,36 @@ rule dummy:
 #		--skip-gene-tables --save-info-string needed? the size generated using load is 4x larger than vcf2db.py below, but the db file cannot be queried as before, probably only VEP fields are included.
 # 8/4/19:  --info-exclude MLEAF --info-exclude MLEAC because EU's exome data has 2 values in these two fields.
 #took 12 hours for a genome 4/12/21
-rule query_gemini_family:
+rule query_slivar_sample:
 	input:
 		vcf = '{sample}.SORTED.VT.VEP.VCFANNO.vcf.gz',
 		pedigree = "{ped}.ped"
-		# db = '{sample}.PED_{ped}.gemini.db'
 	output:
-		bcf = "{sample}.{ped}.bcf",
+		bcf = "{sample}.{ped}.bcf"
+	shell:
+		"""
+		module load {config[slivar_version]}
+		time \
+		slivar expr \
+		--js ${{SLIVAR_HOME}}/js/slivar-functions.js \
+		--vcf {input.vcf} \
+		--ped {input.pedigree} \
+		--pass-only \
+		--info 'variant.FILTER == "PASS" && variant.ALT[0] != "*"' \
+		--family-expr 'denovo:fam.every(segregating_denovo)' \
+		--family-expr 'dominant:fam.every(segregating_dominant)' \
+		--family-expr 'recessive:fam.every(segregating_recessive)' \
+		--trio 'comphet_side:comphet_side(kid, mom, dad)' \
+		--family-expr 'x_denovo:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_denovo_x)' \
+		--family-expr 'x_dominant:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_dominant_x)' \
+		--family-expr 'x_recessive:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_recessive_x)' \
+		-o {output.bcf}
+		"""
+
+rule query_gemini_family:
+	input:
+		bcf = "{sample}.{ped}.bcf"
+	output:
 		denovo = temp('temp/{sample}.{ped}.denovo.tsv'),
 		ad = temp('temp/{sample}.{ped}.ad.tsv'),
 		ar = temp('temp/{sample}.{ped}.ar.tsv'),
@@ -1087,29 +1110,13 @@ rule query_gemini_family:
 		# mkdir -p /lscratch/$SLURM_JOB_ID
 		# cp {input} /lscratch/$SLURM_JOB_ID/.
 		# WKDIR=/lscratch/$SLURM_JOB_ID
-			time \
-			slivar expr \
-			--js ${{SLIVAR_HOME}}/js/slivar-functions.js \
-			--vcf {input.vcf} \
-			--ped {input.pedigree} \
-			--pass-only \
-			--info 'variant.FILTER == "PASS" && variant.ALT[0] != "*"' \
-			--family-expr 'denovo:fam.every(segregating_denovo)' \
-			--family-expr 'dominant:fam.every(segregating_dominant)' \
-			--family-expr 'recessive:fam.every(segregating_recessive)' \
-			--trio 'comphet_side:comphet_side(kid, mom, dad)' \
-			--family-expr 'x_denovo:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_denovo_x)' \
-			--family-expr 'x_dominant:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_dominant_x)' \
-			--family-expr 'x_recessive:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_recessive_x)' \
-			-o {output.bcf}
-
-			touch {output.denovo}
-			touch {output.ad}
-			touch {output.ar}
-			touch {output.comphets}
-			touch {output.xdenovo}
-			touch {output.xd}
-			touch {output.xr}
+		touch {output.denovo}
+		touch {output.ad}
+		touch {output.ar}
+		touch {output.comphets}
+		touch {output.xdenovo}
+		touch {output.xd}
+		touch {output.xr}
 		"""
 
 localrules: sortGeminiFamily
