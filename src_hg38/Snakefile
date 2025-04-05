@@ -1096,12 +1096,11 @@ rule query_slivar_sample:
 			-o {output.bcf}
 		"""
 
-localrules: filter_slivar_family
 rule filter_slivar_family:
 	input:
 		bcf = "{sample}.{ped}.bcf"
 	output:
-		bcf = temp('{family_name}.{sample}.{ped}.bcf')
+		bcf = "{family_name}.{sample}.{ped}.bcf"
 	shell:
 		"""
 		module load {config[slivar_version]} {config[R_version]}
