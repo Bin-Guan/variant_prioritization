@@ -1096,7 +1096,7 @@ rule filter_slivar_family:
 	input:
 		bcf = "{sample}.{ped}.bcf"
 	output:
-		bcf = temp('temp/{family_name}.{sample}.{ped}.bcf')
+		bcf = temp('temp/{family}.{sample}.{ped}.bcf')
 	shell:
 		"""
 		module load {config[slivar_version]} {config[R_version]}
