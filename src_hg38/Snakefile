@@ -121,7 +121,7 @@ rule all:
 			ped=PEDfile, \
 			family_name=Family_Name, \
 			gemini_lenient = config['gemini_lenient']) if ('family_query' in config['output_type'] and config['seeGEM'].upper() != 'TRUE') else 'dummy.txt',
-		expand('{sample}.{ped}.bcf', \
+		expand('{family}.{sample}.{ped}.bcf', \
 			sample=SAMPLE, \
 			ped=PEDfile, \
 			family_name=Family_Name) if ('family_query' in config['output_type']) else 'dummy.txt',
