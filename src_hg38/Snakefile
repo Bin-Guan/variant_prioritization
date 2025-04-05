@@ -1181,75 +1181,75 @@ else:
 #####
 #####
 
-if config['datatype'].upper() == "PANEL":
-	rule sortGemini:
-		input:
-			tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.tsv',
-			ref_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.ref.tsv'
-		output:
-			rearranged_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.rearranged.tsv',
-			filtered_tsv = 'gemini_tsv_filtered/{sampleid}.{sample}.{ped}.gemini.filtered.tsv',
-			filtered_xlsx = 'gemini_xlsx/{sampleid}.{sample}.{ped}.gemini.filtered.xlsx'
-		shell:
-			"""
-			if [[ $(module list 2>&1 | grep "R/" | wc -l) < 1 ]]; then module load {config[R_version]}; fi
-			if [ {config[NGS_genotype_calling]} == OGL ]
-			then
-				if [[ -e ../CoNVaDING/CNV_hiSens/{wildcards.sampleid}.markDup.aligned.only.best.score.shortlist.txt ]]; then
-				Rscript /home/$USER/git/variant_prioritization/src_hg38/sortGeminiTSV_v1.R \
-					{input.tsv} {input.ref_tsv} {config[OGL_Dx_research_genes]} {output.rearranged_tsv} {output.filtered_tsv} {wildcards.sampleid} {output.filtered_xlsx} {config[aaf_change]} ../manta/manta.{wildcards.sampleid}.annotated.tsv {config[manta_freq]} filePlaceholder {config[jaxcnv_freq]} filePlaceholder ../scramble_anno/{wildcards.sampleid}.scramble.xlsx ../scramble_anno/{wildcards.sampleid}.scramble.del.tsv {config[configuration_file]} filePlaceholder ../CoNVaDING/CNV_hiSens/{wildcards.sampleid}.markDup.aligned.only.best.score.shortlist.txt gemini_xlsx/{wildcards.sampleid}.geneLAF.pdf
-				else
-				Rscript /home/$USER/git/variant_prioritization/src_hg38/sortGeminiTSV_v1.R \
-					{input.tsv} {input.ref_tsv} {config[OGL_Dx_research_genes]} {output.rearranged_tsv} {output.filtered_tsv} {wildcards.sampleid} {output.filtered_xlsx} {config[aaf_change]} ../manta/manta.{wildcards.sampleid}.annotated.tsv {config[manta_freq]} filePlaceholder {config[jaxcnv_freq]} filePlaceholder ../scramble_anno/{wildcards.sampleid}.scramble.xlsx ../scramble_anno/{wildcards.sampleid}.scramble.del.tsv {config[configuration_file]} filePlaceholder ../CoNVaDING/CNV_hiSens/{wildcards.sampleid}.markDup.best.score.shortlist.txt gemini_xlsx/{wildcards.sampleid}.geneLAF.pdf
-				fi
-			else
-				Rscript /home/$USER/git/variant_prioritization/src_hg38/sortGeminiTSV_v1.R \
-					{input.tsv} {input.ref_tsv} {config[OGL_Dx_research_genes]} {output.rearranged_tsv} {output.filtered_tsv} {wildcards.sampleid} {output.filtered_xlsx} {config[aaf_change]} filePlaceholder {config[manta_freq]} filePlaceholder filePlaceholder filePlaceholder {config[configuration_file]} filePlaceholder filePlaceholder filePlaceholder
-			fi
-			"""
-elif config['datatype'].upper() in ["EXOME", "WES"]:
-	rule sortGemini:
-		input:
-			tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.tsv',
-			ref_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.ref.tsv'
-		output:
-			rearranged_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.rearranged.tsv',
-			filtered_tsv = 'gemini_tsv_filtered/{sampleid}.{sample}.{ped}.gemini.filtered.tsv',
-			filtered_xlsx = 'gemini_xlsx/{sampleid}.{sample}.{ped}.gemini.filtered.xlsx'
-		shell:
-			"""
-			if [[ $(module list 2>&1 | grep "R/" | wc -l) < 1 ]]; then module load {config[R_version]}; fi
-			if [ {config[NGS_genotype_calling]} == "OGL" ]
-			then
-				Rscript /home/$USER/git/variant_prioritization/src_hg38/sortGeminiTSV_v1.R \
-					{input.tsv} {input.ref_tsv} {config[OGL_Dx_research_genes]} {output.rearranged_tsv} {output.filtered_tsv} {wildcards.sampleid} {output.filtered_xlsx} {config[aaf_change]} ../manta/manta.{wildcards.sampleid}.annotated.tsv {config[manta_freq]} filePlaceholder {config[jaxcnv_freq]} ../AutoMap/{wildcards.sampleid}/{wildcards.sampleid}.HomRegions.annot.tsv ../scramble_anno/{wildcards.sampleid}.scramble.xlsx ../scramble_anno/{wildcards.sampleid}.scramble.del.tsv {config[configuration_file]} filePlaceholder
-			else
-				Rscript /home/$USER/git/variant_prioritization/src_hg38/sortGeminiTSV_v1.R \
-					{input.tsv} {input.ref_tsv} {config[OGL_Dx_research_genes]} {output.rearranged_tsv} {output.filtered_tsv} {wildcards.sampleid} {output.filtered_xlsx} {config[aaf_change]} filePlaceholder {config[manta_freq]} filePlaceholder {config[jaxcnv_freq]} filePlaceholder filePlaceholder filePlaceholder {config[configuration_file]} filePlaceholder
-			fi
-			"""
-else:
-	rule sortGemini:
-		input:
-			tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.tsv',
-			ref_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.ref.tsv'
-		output:
-			rearranged_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.rearranged.tsv',
-			filtered_tsv = 'gemini_tsv_filtered/{sampleid}.{sample}.{ped}.gemini.filtered.tsv',
-			filtered_xlsx = 'gemini_xlsx/{sampleid}.{sample}.{ped}.gemini.filtered.xlsx'
-		shell:
-			"""
-			mkdir -p gemini_tsv_filtered gemini_xlsx
-			module load {config[R_version]}
-			if [ {config[NGS_genotype_calling]} == "OGL" ]
-			then
-				Rscript /home/$USER/git/variant_prioritization/src_hg38/sortGeminiTSV_v1.R \
-					{input.tsv} {input.ref_tsv} {config[OGL_Dx_research_genes]} {output.rearranged_tsv} {output.filtered_tsv} {wildcards.sampleid} {output.filtered_xlsx} {config[aaf_change]} ../manta/manta.{wildcards.sampleid}.annotated.tsv {config[manta_freq]} ../jax-cnv/{wildcards.sampleid}.jaxcnv.annotated.tsv {config[jaxcnv_freq]} ../AutoMap/{wildcards.sampleid}/{wildcards.sampleid}.HomRegions.annot.tsv ../scramble_anno/{wildcards.sampleid}.scramble.xlsx filePlaceholder {config[configuration_file]} ../clinSV/{wildcards.sampleid}.clinSV.RARE_PASS_GENE.eG.filtered.xlsx
-			else
-				Rscript /home/$USER/git/variant_prioritization/src_hg38/sortGeminiTSV_v1.R \
-					{input.tsv} {input.ref_tsv} {config[OGL_Dx_research_genes]} {output.rearranged_tsv} {output.filtered_tsv} {wildcards.sampleid} {output.filtered_xlsx} {config[aaf_change]} filePlaceholder {config[manta_freq]} filePlaceholder {config[jaxcnv_freq]} filePlaceholder filePlaceholder filePlaceholder {config[configuration_file]} filePlaceholder
-			fi
-			"""
+# if config['datatype'].upper() == "PANEL":
+# 	rule sortGemini:
+# 		input:
+# 			tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.tsv',
+# 			ref_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.ref.tsv'
+# 		output:
+# 			rearranged_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.rearranged.tsv',
+# 			filtered_tsv = 'gemini_tsv_filtered/{sampleid}.{sample}.{ped}.gemini.filtered.tsv',
+# 			filtered_xlsx = 'gemini_xlsx/{sampleid}.{sample}.{ped}.gemini.filtered.xlsx'
+# 		shell:
+# 			"""
+# 			if [[ $(module list 2>&1 | grep "R/" | wc -l) < 1 ]]; then module load {config[R_version]}; fi
+# 			if [ {config[NGS_genotype_calling]} == OGL ]
+# 			then
+# 				if [[ -e ../CoNVaDING/CNV_hiSens/{wildcards.sampleid}.markDup.aligned.only.best.score.shortlist.txt ]]; then
+# 				Rscript /home/$USER/git/variant_prioritization/src_hg38/sortGeminiTSV_v1.R \
+# 					{input.tsv} {input.ref_tsv} {config[OGL_Dx_research_genes]} {output.rearranged_tsv} {output.filtered_tsv} {wildcards.sampleid} {output.filtered_xlsx} {config[aaf_change]} ../manta/manta.{wildcards.sampleid}.annotated.tsv {config[manta_freq]} filePlaceholder {config[jaxcnv_freq]} filePlaceholder ../scramble_anno/{wildcards.sampleid}.scramble.xlsx ../scramble_anno/{wildcards.sampleid}.scramble.del.tsv {config[configuration_file]} filePlaceholder ../CoNVaDING/CNV_hiSens/{wildcards.sampleid}.markDup.aligned.only.best.score.shortlist.txt gemini_xlsx/{wildcards.sampleid}.geneLAF.pdf
+# 				else
+# 				Rscript /home/$USER/git/variant_prioritization/src_hg38/sortGeminiTSV_v1.R \
+# 					{input.tsv} {input.ref_tsv} {config[OGL_Dx_research_genes]} {output.rearranged_tsv} {output.filtered_tsv} {wildcards.sampleid} {output.filtered_xlsx} {config[aaf_change]} ../manta/manta.{wildcards.sampleid}.annotated.tsv {config[manta_freq]} filePlaceholder {config[jaxcnv_freq]} filePlaceholder ../scramble_anno/{wildcards.sampleid}.scramble.xlsx ../scramble_anno/{wildcards.sampleid}.scramble.del.tsv {config[configuration_file]} filePlaceholder ../CoNVaDING/CNV_hiSens/{wildcards.sampleid}.markDup.best.score.shortlist.txt gemini_xlsx/{wildcards.sampleid}.geneLAF.pdf
+# 				fi
+# 			else
+# 				Rscript /home/$USER/git/variant_prioritization/src_hg38/sortGeminiTSV_v1.R \
+# 					{input.tsv} {input.ref_tsv} {config[OGL_Dx_research_genes]} {output.rearranged_tsv} {output.filtered_tsv} {wildcards.sampleid} {output.filtered_xlsx} {config[aaf_change]} filePlaceholder {config[manta_freq]} filePlaceholder filePlaceholder filePlaceholder {config[configuration_file]} filePlaceholder filePlaceholder filePlaceholder
+# 			fi
+# 			"""
+# elif config['datatype'].upper() in ["EXOME", "WES"]:
+# 	rule sortGemini:
+# 		input:
+# 			tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.tsv',
+# 			ref_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.ref.tsv'
+# 		output:
+# 			rearranged_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.rearranged.tsv',
+# 			filtered_tsv = 'gemini_tsv_filtered/{sampleid}.{sample}.{ped}.gemini.filtered.tsv',
+# 			filtered_xlsx = 'gemini_xlsx/{sampleid}.{sample}.{ped}.gemini.filtered.xlsx'
+# 		shell:
+# 			"""
+# 			if [[ $(module list 2>&1 | grep "R/" | wc -l) < 1 ]]; then module load {config[R_version]}; fi
+# 			if [ {config[NGS_genotype_calling]} == "OGL" ]
+# 			then
+# 				Rscript /home/$USER/git/variant_prioritization/src_hg38/sortGeminiTSV_v1.R \
+# 					{input.tsv} {input.ref_tsv} {config[OGL_Dx_research_genes]} {output.rearranged_tsv} {output.filtered_tsv} {wildcards.sampleid} {output.filtered_xlsx} {config[aaf_change]} ../manta/manta.{wildcards.sampleid}.annotated.tsv {config[manta_freq]} filePlaceholder {config[jaxcnv_freq]} ../AutoMap/{wildcards.sampleid}/{wildcards.sampleid}.HomRegions.annot.tsv ../scramble_anno/{wildcards.sampleid}.scramble.xlsx ../scramble_anno/{wildcards.sampleid}.scramble.del.tsv {config[configuration_file]} filePlaceholder
+# 			else
+# 				Rscript /home/$USER/git/variant_prioritization/src_hg38/sortGeminiTSV_v1.R \
+# 					{input.tsv} {input.ref_tsv} {config[OGL_Dx_research_genes]} {output.rearranged_tsv} {output.filtered_tsv} {wildcards.sampleid} {output.filtered_xlsx} {config[aaf_change]} filePlaceholder {config[manta_freq]} filePlaceholder {config[jaxcnv_freq]} filePlaceholder filePlaceholder filePlaceholder {config[configuration_file]} filePlaceholder
+# 			fi
+# 			"""
+# else:
+# 	rule sortGemini:
+# 		input:
+# 			tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.tsv',
+# 			ref_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.ref.tsv'
+# 		output:
+# 			rearranged_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.rearranged.tsv',
+# 			filtered_tsv = 'gemini_tsv_filtered/{sampleid}.{sample}.{ped}.gemini.filtered.tsv',
+# 			filtered_xlsx = 'gemini_xlsx/{sampleid}.{sample}.{ped}.gemini.filtered.xlsx'
+# 		shell:
+# 			"""
+# 			mkdir -p gemini_tsv_filtered gemini_xlsx
+# 			module load {config[R_version]}
+# 			if [ {config[NGS_genotype_calling]} == "OGL" ]
+# 			then
+# 				Rscript /home/$USER/git/variant_prioritization/src_hg38/sortGeminiTSV_v1.R \
+# 					{input.tsv} {input.ref_tsv} {config[OGL_Dx_research_genes]} {output.rearranged_tsv} {output.filtered_tsv} {wildcards.sampleid} {output.filtered_xlsx} {config[aaf_change]} ../manta/manta.{wildcards.sampleid}.annotated.tsv {config[manta_freq]} ../jax-cnv/{wildcards.sampleid}.jaxcnv.annotated.tsv {config[jaxcnv_freq]} ../AutoMap/{wildcards.sampleid}/{wildcards.sampleid}.HomRegions.annot.tsv ../scramble_anno/{wildcards.sampleid}.scramble.xlsx filePlaceholder {config[configuration_file]} ../clinSV/{wildcards.sampleid}.clinSV.RARE_PASS_GENE.eG.filtered.xlsx
+# 			else
+# 				Rscript /home/$USER/git/variant_prioritization/src_hg38/sortGeminiTSV_v1.R \
+# 					{input.tsv} {input.ref_tsv} {config[OGL_Dx_research_genes]} {output.rearranged_tsv} {output.filtered_tsv} {wildcards.sampleid} {output.filtered_xlsx} {config[aaf_change]} filePlaceholder {config[manta_freq]} filePlaceholder {config[jaxcnv_freq]} filePlaceholder filePlaceholder filePlaceholder {config[configuration_file]} filePlaceholder
+# 			fi
+# 			"""
 
 # [] or [[]] are both fine in biowulf2, the space is more important.
 
