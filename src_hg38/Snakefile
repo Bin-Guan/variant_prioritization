@@ -108,7 +108,7 @@ else:
 
 rule all:
 	input:
-		expand('{sample}.PED_{ped}.gemini.db', sample=SAMPLE, ped=PEDfile) if ('geminiDB' in config['output_type']) else expand('{sample}.SORTED.VT.VEP.VCFANNO.vcf.gz', sample=SAMPLE),
+		expand('{sample}.PED_{ped}.gemini.db', sample=SAMPLE, ped=PEDfile) if ('geminiDB' in config['output_type']) else expand('{sample}.vcf.gz', sample=SAMPLE),
 		# expand('{sample}_PEDDY.ped_check.csv', sample=SAMPLE) if config['ped'] != 'example.ped' else 'dummy.txt',
 		# 'madeline/madeline.done' if 'family_query' in config['output_type'] else 'dummy.txt',
 		expand('sample_reports/{sample}.{family_name}.PED_{ped}.lenient{gemini_lenient}.SeeGEM.report.html', \
