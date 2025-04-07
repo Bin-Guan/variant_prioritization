@@ -19,7 +19,7 @@ cd ~/git
 git clone https://github.com/Bin-Guan/variant_prioritization.git
 ```
 
-## on biowulf, uless you already have the slivar branch checked outn
+## on biowulf, uless you already have the slivar branch checked out
 
 ```bash
 cd ~/git/variant_prioritization
