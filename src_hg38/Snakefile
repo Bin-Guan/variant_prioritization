@@ -1114,7 +1114,7 @@ rule filter_slivar_family:
 
 rule generate_slivar_tsv:
 	input:
-		bcf = "{family_name}.{sample}.{ped}.bcf"
+		bcf = "{family_name}.{sample}.{ped}.bcf",
 		pedigree = "{ped}.ped"
 	output:
 		denovo = temp('temp/{family_name}.{sample}.{ped}.denovo.tsv'),
