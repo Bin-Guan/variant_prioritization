@@ -1261,14 +1261,14 @@ rule filter_slivar_family:
 localrules: sortGeminiFamily
 rule sortGeminiFamily:
 	input:
-		denovo = 'temp/{sample}.{ped}.denovo.tsv',
-		ad = 'temp/{sample}.{ped}.ad.tsv',
-		ar = 'temp/{sample}.{ped}.ar.tsv',
-		comphets = 'temp/{sample}.{ped}.comphets.tsv',
-		xdenovo = 'temp/{sample}.{ped}.xdenovo.tsv',
-		xd = 'temp/{sample}.{ped}.xd.tsv',
-		xr = 'temp/{sample}.{ped}.xr.tsv',
-		# mendel_errors = 'temp/{sample}.{ped}.mendel_errors.tsv'
+		denovo = "{family_name}.{sample}.{ped}.denovo.tsv",
+		ad = "{family_name}.{sample}.{ped}.ad.tsv",
+		ar = "{family_name}.{sample}.{ped}.ar.tsv",
+		comphets = "{family_name}.{sample}.{ped}.comphets.tsv",
+		xdenovo = "{family_name}.{sample}.{ped}.xdenovo.tsv",
+		xd = "{family_name}.{sample}.{ped}.xd.tsv",
+		xr = "{family_name}.{sample}.{ped}.xr.tsv",
+		# mendel_errors = 'temp/{family_name}.{sample}.{ped}.mendel_errors.tsv'
 	output:
 		xlsx = 'gemini_xlsx/{sample}.{ped}.lenient{gemini_lenient}.xlsx'
 	shell:
