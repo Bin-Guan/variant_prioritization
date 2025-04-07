@@ -1110,7 +1110,7 @@ rule filter_slivar_family:
 		# cp {input} /lscratch/$SLURM_JOB_ID/.
 		# WKDIR=/lscratch/$SLURM_JOB_ID
 			FAMILY_SUBJECTS=`cat {input.pedigree} | grep '{wildcards.family_name}' | awk '{{print $2}}' | paste -sd,`
-			bcftools view -s ${{FAMILY_SUBJECTS}} {output.bcf}
+			bcftools view -s ${{FAMILY_SUBJECTS}} {input.bcf} -o {output.bcf}
 		"""
 
 localrules: sortGeminiFamily
