@@ -125,6 +125,10 @@ rule all:
 			sample=SAMPLE, \
 			ped=PEDfile, \
 			family_name=Family_Name) if ('family_query' in config['output_type']) else 'dummy.txt',
+		expand('{family_name}.{sample}.{ped}.tsv', \
+			sample=SAMPLE, \
+			ped=PEDfile, \
+			family_name=Family_Name) if ('family_query' in config['output_type']) else 'dummy.txt',
 		expand('gemini_xlsx/{sampleid}.{sample}.{ped}.gemini.filtered.xlsx', sample=SAMPLE, ped=PEDfile, sampleid=SampleID) if ('individual_query' in config['output_type']) else 'dummy.txt',
 		expand('LesserAlleleFreq/{sampleid}.{sample}.{ped}.LAF.jpeg', sample=SAMPLE, ped=PEDfile, sampleid=SampleID) if config['LAFplot'] == 'TRUE' else 'dummy.txt',
 		# 'dummy.txt' if config['spliceai'].upper() in ['WRAPPER', 'VCFANNO'] else expand('temp/{sample}.spliceai.new.vcf.depot.merged', sample=SAMPLE),
