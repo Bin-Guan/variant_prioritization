@@ -1101,7 +1101,7 @@ rule filter_slivar_family:
 		bcf = "{sample}.{ped}.bcf",
 		pedigree = "{ped}.ped"
 	output:
-		bcf = "{family_name}.{sample}.{ped}.bcf"
+		bcf = "{family_name}.{sample}.{ped}.bcf",
 		denovo = temp('temp/{family_name}.{sample}.{ped}.denovo.tsv'),
 		ad = temp('temp/{family_name}.{sample}.{ped}.ad.tsv'),
 		ar = temp('temp/{family_name}.{sample}.{ped}.ar.tsv'),
