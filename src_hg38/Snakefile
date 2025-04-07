@@ -1109,7 +1109,7 @@ rule filter_slivar_family:
 		# mkdir -p /lscratch/$SLURM_JOB_ID
 		# cp {input} /lscratch/$SLURM_JOB_ID/.
 		# WKDIR=/lscratch/$SLURM_JOB_ID
-			FAMILY_SUBJECTS=`cat {{pedigree}} | grep '{{family_name}}' | awk '{print $2}' | paste -sd,`
+			FAMILY_SUBJECTS=`cat {{pedigree}} | grep '{{family_name}}' | awk '{{print $2}}' | paste -sd,`
 			bcftools view -s ${{FAMILY_SUBJECTS}} {output.bcf}
 		"""
 
