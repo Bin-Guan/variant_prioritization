@@ -1207,12 +1207,14 @@ rule query_slivar_sample:
 		pedigree = "{ped}.ped"
 	output:
 		bcf = "{family_name}.{sample}.{ped}.bcf",
+		pedigree = "{family_name}.{sample}.{ped}.ped",
 	shell:
 		"""
 		if [[ $(module list 2>&1 | grep "samtools" | wc -l) < 1 ]]; then module load {config[samtools_version]}; fi
 		if [[ $(module list 2>&1 | grep "slivar" | wc -l) < 1 ]]; then module load {config[slivar_version]}; fi
 		FAMILY_SUBJECTS=`cat {input.pedigree} | grep '{wildcards.family_name}' | awk '{{print $2}}' | paste -sd,`
 		bcftools view -s ${{FAMILY_SUBJECTS}} {input.vcf} -o {output.bcf}
+		head -n 1 {input.pedigree} > {output.pedigree} && cat {input.pedigree} | grep '^{wildcards.family_name}' >> {output.pedigree}
 		"""
 		# slivar expr \
 		# --js ${{SLIVAR_HOME}}/js/slivar-functions.js \
