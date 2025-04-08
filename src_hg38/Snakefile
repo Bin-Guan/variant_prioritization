@@ -1232,6 +1232,7 @@ rule query_slivar_sample:
 		-o {output.bcf_out}
 		"""
 
+localrules: filter_slivar_family
 rule filter_slivar_family:
 	input:
 		bcf = "{family_name}.{sample}.{ped}.bcf",
