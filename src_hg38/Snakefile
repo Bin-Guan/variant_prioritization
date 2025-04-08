@@ -1206,30 +1206,31 @@ rule query_slivar_sample:
 		vcf = '{sample}.vcf.gz',
 		pedigree = "{ped}.ped"
 	output:
-		bcf = "{family_name}.{sample}.{ped}.bcf",
+		bcf_in = "{family_name}.{sample}.{ped}.in.bcf",
+		bcf_out = "{family_name}.{sample}.{ped}.bcf",
 		pedigree = "{family_name}.{sample}.{ped}.ped",
 	shell:
 		"""
 		if [[ $(module list 2>&1 | grep "samtools" | wc -l) < 1 ]]; then module load {config[samtools_version]}; fi
 		if [[ $(module list 2>&1 | grep "slivar" | wc -l) < 1 ]]; then module load {config[slivar_version]}; fi
 		FAMILY_SUBJECTS=`cat {input.pedigree} | grep '{wildcards.family_name}' | awk '{{print $2}}' | paste -sd,`
-		bcftools view -s ${{FAMILY_SUBJECTS}} {input.vcf} -o {output.bcf}
+		bcftools view -s ${{FAMILY_SUBJECTS}} {input.vcf} -o {output.bcf_in}
 		head -n 1 {input.pedigree} > {output.pedigree} && cat {input.pedigree} | grep '^{wildcards.family_name}' >> {output.pedigree}
+		slivar expr \
+		--js ${{SLIVAR_HOME}}/js/slivar-functions.js \
+		--vcf {output.bcf_in} \
+		--ped {output.pedigree} \
+		--pass-only \
+		--info 'variant.FILTER == "PASS" && variant.ALT[0] != "*"' \
+		--family-expr 'denovo:fam.every(segregating_denovo)' \
+		--family-expr 'dominant:fam.every(segregating_dominant)' \
+		--family-expr 'recessive:fam.every(segregating_recessive)' \
+		--trio 'comphet_side:comphet_side(kid, mom, dad)' \
+		--family-expr 'x_denovo:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_denovo_x)' \
+		--family-expr 'x_dominant:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_dominant_x)' \
+		--family-expr 'x_recessive:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_recessive_x)' \
+		-o {output.bcf_out}
 		"""
-		# slivar expr \
-		# --js ${{SLIVAR_HOME}}/js/slivar-functions.js \
-		# --vcf {output.bcf} \
-		# --ped {output.pedigree} \
-		# --pass-only \
-		# --info 'variant.FILTER == "PASS" && variant.ALT[0] != "*"' \
-		# --family-expr 'denovo:fam.every(segregating_denovo)' \
-		# --family-expr 'dominant:fam.every(segregating_dominant)' \
-		# --family-expr 'recessive:fam.every(segregating_recessive)' \
-		# --trio 'comphet_side:comphet_side(kid, mom, dad)' \
-		# --family-expr 'x_denovo:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_denovo_x)' \
-		# --family-expr 'x_dominant:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_dominant_x)' \
-		# --family-expr 'x_recessive:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_recessive_x)' \
-		# -o {output.bcf}
 
 # rule filter_slivar_family:
 # 	input:
