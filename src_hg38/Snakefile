@@ -1206,57 +1206,59 @@ rule query_slivar_sample:
 		vcf = '{sample}.vcf.gz',
 		pedigree = "{ped}.ped"
 	output:
-		bcf = "{sample}.{ped}.bcf"
-	shell:
-		"""
-		module load {config[slivar_version]}
-			time \
-			slivar expr \
-			--js ${{SLIVAR_HOME}}/js/slivar-functions.js \
-			--vcf {input.vcf} \
-			--ped {input.pedigree} \
-			--pass-only \
-			--info 'variant.FILTER == "PASS" && variant.ALT[0] != "*"' \
-			--family-expr 'denovo:fam.every(segregating_denovo)' \
-			--family-expr 'dominant:fam.every(segregating_dominant)' \
-			--family-expr 'recessive:fam.every(segregating_recessive)' \
-			--trio 'comphet_side:comphet_side(kid, mom, dad)' \
-			--family-expr 'x_denovo:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_denovo_x)' \
-			--family-expr 'x_dominant:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_dominant_x)' \
-			--family-expr 'x_recessive:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_recessive_x)' \
-			-o {output.bcf}
-		"""
-
-rule filter_slivar_family:
-	input:
-		bcf = "{sample}.{ped}.bcf",
-		pedigree = "{ped}.ped"
-	output:
 		bcf = "{family_name}.{sample}.{ped}.bcf",
-		denovo = "{family_name}.{sample}.{ped}.denovo.tsv",
-		ad = "{family_name}.{sample}.{ped}.ad.tsv",
-		ar = "{family_name}.{sample}.{ped}.ar.tsv",
-		comphets = "{family_name}.{sample}.{ped}.comphets.tsv",
-		xdenovo = "{family_name}.{sample}.{ped}.xdenovo.tsv",
-		xd = "{family_name}.{sample}.{ped}.xd.tsv",
-		xr = "{family_name}.{sample}.{ped}.xr.tsv",
 	shell:
 		"""
 		if [[ $(module list 2>&1 | grep "samtools" | wc -l) < 1 ]]; then module load {config[samtools_version]}; fi
 		if [[ $(module list 2>&1 | grep "slivar" | wc -l) < 1 ]]; then module load {config[slivar_version]}; fi
-		# mkdir -p /lscratch/$SLURM_JOB_ID
-		# cp {input} /lscratch/$SLURM_JOB_ID/.
-		# WKDIR=/lscratch/$SLURM_JOB_ID
-			FAMILY_SUBJECTS=`cat {input.pedigree} | grep '{wildcards.family_name}' | awk '{{print $2}}' | paste -sd,`
-			bcftools view -s ${{FAMILY_SUBJECTS}} {input.bcf} -o {output.bcf}
-			slivar tsv -p {input.pedigree} -s denovo {input.bcf} > {output.denovo}
-			slivar tsv -p {input.pedigree} -s dominant {input.bcf} > {output.ad}
-			slivar tsv -p {input.pedigree} -s recessive {input.bcf} > {output.ar}
-			slivar tsv -p {input.pedigree} -s comphet_side {input.bcf} > {output.comphets}
-			slivar tsv -p {input.pedigree} -s x_denovo {input.bcf} > {output.xdenovo}
-			slivar tsv -p {input.pedigree} -s x_dominant {input.bcf} > {output.xd}
-			slivar tsv -p {input.pedigree} -s x_recessive {input.bcf} > {output.xr}
+		FAMILY_SUBJECTS=`cat {input.pedigree} | grep '{wildcards.family_name}' | awk '{{print $2}}' | paste -sd,`
+		bcftools view -s ${{FAMILY_SUBJECTS}} {input.vcf} -o {output.bcf}
 		"""
+		# slivar expr \
+		# --js ${{SLIVAR_HOME}}/js/slivar-functions.js \
+		# --vcf {output.bcf} \
+		# --ped {output.pedigree} \
+		# --pass-only \
+		# --info 'variant.FILTER == "PASS" && variant.ALT[0] != "*"' \
+		# --family-expr 'denovo:fam.every(segregating_denovo)' \
+		# --family-expr 'dominant:fam.every(segregating_dominant)' \
+		# --family-expr 'recessive:fam.every(segregating_recessive)' \
+		# --trio 'comphet_side:comphet_side(kid, mom, dad)' \
+		# --family-expr 'x_denovo:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_denovo_x)' \
+		# --family-expr 'x_dominant:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_dominant_x)' \
+		# --family-expr 'x_recessive:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_recessive_x)' \
+		# -o {output.bcf}
+
+# rule filter_slivar_family:
+# 	input:
+# 		bcf = "{sample}.{ped}.bcf",
+# 		pedigree = "{ped}.ped"
+# 	output:
+# 		bcf = "{family_name}.{sample}.{ped}.bcf",
+# 		denovo = "{family_name}.{sample}.{ped}.denovo.tsv",
+# 		ad = "{family_name}.{sample}.{ped}.ad.tsv",
+# 		ar = "{family_name}.{sample}.{ped}.ar.tsv",
+# 		comphets = "{family_name}.{sample}.{ped}.comphets.tsv",
+# 		xdenovo = "{family_name}.{sample}.{ped}.xdenovo.tsv",
+# 		xd = "{family_name}.{sample}.{ped}.xd.tsv",
+# 		xr = "{family_name}.{sample}.{ped}.xr.tsv",
+# 	shell:
+# 		"""
+# 		if [[ $(module list 2>&1 | grep "samtools" | wc -l) < 1 ]]; then module load {config[samtools_version]}; fi
+# 		if [[ $(module list 2>&1 | grep "slivar" | wc -l) < 1 ]]; then module load {config[slivar_version]}; fi
+# 		# mkdir -p /lscratch/$SLURM_JOB_ID
+# 		# cp {input} /lscratch/$SLURM_JOB_ID/.
+# 		# WKDIR=/lscratch/$SLURM_JOB_ID
+# 			FAMILY_SUBJECTS=`cat {input.pedigree} | grep '{wildcards.family_name}' | awk '{{print $2}}' | paste -sd,`
+# 			bcftools view -s ${{FAMILY_SUBJECTS}} {input.bcf} -o {output.bcf}
+# 			slivar tsv -p {input.pedigree} -s denovo {input.bcf} > {output.denovo}
+# 			slivar tsv -p {input.pedigree} -s dominant {input.bcf} > {output.ad}
+# 			slivar tsv -p {input.pedigree} -s recessive {input.bcf} > {output.ar}
+# 			slivar tsv -p {input.pedigree} -s comphet_side {input.bcf} > {output.comphets}
+# 			slivar tsv -p {input.pedigree} -s x_denovo {input.bcf} > {output.xdenovo}
+# 			slivar tsv -p {input.pedigree} -s x_dominant {input.bcf} > {output.xd}
+# 			slivar tsv -p {input.pedigree} -s x_recessive {input.bcf} > {output.xr}
+# 		"""
 
 localrules: sortGeminiFamily
 rule sortGeminiFamily:
