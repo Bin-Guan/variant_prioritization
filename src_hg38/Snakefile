@@ -1209,7 +1209,6 @@ rule query_slivar_sample:
 		bcf_in = "{family_name}.{sample}.{ped}.in.bcf",
 		bcf = "{family_name}.{sample}.{ped}.bcf",
 		pedigree = "{family_name}.{sample}.{ped}.ped",
-		bcf = "{family_name}.{sample}.{ped}.bcf",
 		denovo = "{family_name}.{sample}.{ped}.denovo.tsv",
 		ad = "{family_name}.{sample}.{ped}.ad.tsv",
 		ar = "{family_name}.{sample}.{ped}.ar.tsv",
