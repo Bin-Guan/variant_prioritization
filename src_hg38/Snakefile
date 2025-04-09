@@ -1226,8 +1226,8 @@ rule query_slivar_sample:
 			time \
 			slivar expr \
 			--js ${{SLIVAR_HOME}}/js/slivar-functions.js \
-			--vcf {input.vcf} \
-			--ped {output.bcf_in} \
+			--vcf {output.bcf_in} \
+			--ped {output.pedigree} \
 			--pass-only \
 			--info 'variant.FILTER == "PASS" && variant.ALT[0] != "*"' \
 			--family-expr 'denovo:fam.every(segregating_denovo)' \
