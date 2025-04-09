@@ -1207,7 +1207,7 @@ rule query_slivar_sample:
 		pedigree = "{ped}.ped"
 	output:
 		bcf_in = "{family_name}.{sample}.{ped}.in.bcf",
-		bcf_out = "{family_name}.{sample}.{ped}.bcf",
+		bcf = "{family_name}.{sample}.{ped}.bcf",
 		pedigree = "{family_name}.{sample}.{ped}.ped",
 		denovo = "{family_name}.{sample}.{ped}.denovo.tsv",
 		ad = "{family_name}.{sample}.{ped}.ad.tsv",
@@ -1236,7 +1236,7 @@ rule query_slivar_sample:
 		--family-expr 'x_denovo:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_denovo_x)' \
 		--family-expr 'x_dominant:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_dominant_x)' \
 		--family-expr 'x_recessive:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_recessive_x)' \
-		-o {output.bcf_out}
+		-o {output.bcf}
 		slivar tsv -p {input.pedigree} -s denovo {input.bcf} > {output.denovo}
 		slivar tsv -p {input.pedigree} -s dominant {input.bcf} > {output.ad}
 		slivar tsv -p {input.pedigree} -s recessive {input.bcf} > {output.ar}
