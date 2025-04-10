@@ -23,7 +23,7 @@ git clone https://github.com/Bin-Guan/variant_prioritization.git
 
 ```bash
 cd ~/git/variant_prioritization
-git checkout slivar
+git checkout before
 ```
 
 ## on interactive node
@@ -35,61 +35,67 @@ module load snakemake/7.32.4
 cd /data/OGL/genome/ChileMAC
 ls -l
 total 4605451
--rw-r-----. 1 vanettenwj OGL 4713444568 Mar 31 15:20 ChileMAC.fbDv.anno.vcf.gz
--rw-rw----. 1 vanettenwj OGL    2536226 Mar 31 15:32 ChileMAC.fbDv.anno.vcf.gz.tbi
--rw-r-----. 1 vanettenwj OGL        274 Mar 31 15:21 ChileMAC.ped
+-rw-r----- 1 vanettenwj OGL 4713444568 Mar 31 15:20 ChileMAC.fbDv.anno.vcf.gz
+-rw-rw---- 1 vanettenwj OGL    2536226 Mar 31 15:32 ChileMAC.fbDv.anno.vcf.gz.tbi
+-rw-r----- 1 vanettenwj OGL        274 Apr  8 19:31 ChileMAC.ped
 
 snakemake -n -s "/home/$USER/git/variant_prioritization/src_hg38/Snakefile" --configfile "/home/$USER/git/variant_prioritization/config_variant_prioritization.yaml" --cores all
 Would remove temporary output dummy.txt
 Job stats:
-job                     count
---------------------  -------
-all                         1
-dummy                       1
-filter_slivar_family        4
-query_slivar_sample         1
-total                       7
+job                    count
+-------------------  -------
+all                        1
+dummy                      1
+query_slivar_sample        4
+total                      6
 
 snakemake -s "/home/$USER/git/variant_prioritization/src_hg38/Snakefile" --configfile "/home/$USER/git/variant_prioritization/config_variant_prioritization.yaml" --cores all
 
-[vanettenwj@cn4317 ChileMAC]$ ls -l
-total 16050527
--rw-rw---- 1 vanettenwj OGL 2029551814 Apr  7 17:18 ChileMAC.fbDv.anno.ChileMAC.bcf
--rw-r----- 1 vanettenwj OGL 4713444568 Mar 31 15:20 ChileMAC.fbDv.anno.vcf.gz
--rw-rw---- 1 vanettenwj OGL    2536226 Mar 31 15:32 ChileMAC.fbDv.anno.vcf.gz.tbi
--rw-r----- 1 vanettenwj OGL        274 Mar 31 15:21 ChileMAC.ped
--rw-rw---- 1 vanettenwj OGL  245001118 Apr  7 17:41 RYF1.ChileMAC.fbDv.anno.ChileMAC.ad.tsv
--rw-rw---- 1 vanettenwj OGL  169407543 Apr  7 17:41 RYF1.ChileMAC.fbDv.anno.ChileMAC.ar.tsv
--rw-rw---- 1 vanettenwj OGL 1750510183 Apr  7 17:41 RYF1.ChileMAC.fbDv.anno.ChileMAC.bcf
--rw-rw---- 1 vanettenwj OGL  250949259 Apr  7 17:41 RYF1.ChileMAC.fbDv.anno.ChileMAC.comphets.tsv
--rw-rw---- 1 vanettenwj OGL      37160 Apr  7 17:41 RYF1.ChileMAC.fbDv.anno.ChileMAC.denovo.tsv
--rw-rw---- 1 vanettenwj OGL      28534 Apr  7 17:41 RYF1.ChileMAC.fbDv.anno.ChileMAC.xdenovo.tsv
--rw-rw---- 1 vanettenwj OGL    7392919 Apr  7 17:41 RYF1.ChileMAC.fbDv.anno.ChileMAC.xd.tsv
--rw-rw---- 1 vanettenwj OGL   10223949 Apr  7 17:41 RYF1.ChileMAC.fbDv.anno.ChileMAC.xr.tsv
--rw-rw---- 1 vanettenwj OGL  245001118 Apr  7 17:30 RYF2.ChileMAC.fbDv.anno.ChileMAC.ad.tsv
--rw-rw---- 1 vanettenwj OGL  169407543 Apr  7 17:30 RYF2.ChileMAC.fbDv.anno.ChileMAC.ar.tsv
--rw-rw---- 1 vanettenwj OGL 1750227444 Apr  7 17:30 RYF2.ChileMAC.fbDv.anno.ChileMAC.bcf
--rw-rw---- 1 vanettenwj OGL  250949259 Apr  7 17:30 RYF2.ChileMAC.fbDv.anno.ChileMAC.comphets.tsv
--rw-rw---- 1 vanettenwj OGL      37160 Apr  7 17:30 RYF2.ChileMAC.fbDv.anno.ChileMAC.denovo.tsv
--rw-rw---- 1 vanettenwj OGL      28534 Apr  7 17:30 RYF2.ChileMAC.fbDv.anno.ChileMAC.xdenovo.tsv
--rw-rw---- 1 vanettenwj OGL    7392919 Apr  7 17:30 RYF2.ChileMAC.fbDv.anno.ChileMAC.xd.tsv
--rw-rw---- 1 vanettenwj OGL   10223949 Apr  7 17:30 RYF2.ChileMAC.fbDv.anno.ChileMAC.xr.tsv
--rw-rw---- 1 vanettenwj OGL  245001118 Apr  7 17:41 RYF3.ChileMAC.fbDv.anno.ChileMAC.ad.tsv
--rw-rw---- 1 vanettenwj OGL  169407543 Apr  7 17:41 RYF3.ChileMAC.fbDv.anno.ChileMAC.ar.tsv
--rw-rw---- 1 vanettenwj OGL 1708065356 Apr  7 17:41 RYF3.ChileMAC.fbDv.anno.ChileMAC.bcf
--rw-rw---- 1 vanettenwj OGL  250949259 Apr  7 17:41 RYF3.ChileMAC.fbDv.anno.ChileMAC.comphets.tsv
--rw-rw---- 1 vanettenwj OGL      37160 Apr  7 17:41 RYF3.ChileMAC.fbDv.anno.ChileMAC.denovo.tsv
--rw-rw---- 1 vanettenwj OGL      28534 Apr  7 17:41 RYF3.ChileMAC.fbDv.anno.ChileMAC.xdenovo.tsv
--rw-rw---- 1 vanettenwj OGL    7392919 Apr  7 17:41 RYF3.ChileMAC.fbDv.anno.ChileMAC.xd.tsv
--rw-rw---- 1 vanettenwj OGL   10223949 Apr  7 17:41 RYF3.ChileMAC.fbDv.anno.ChileMAC.xr.tsv
--rw-rw---- 1 vanettenwj OGL  245001118 Apr  7 17:30 RYF4.ChileMAC.fbDv.anno.ChileMAC.ad.tsv
--rw-rw---- 1 vanettenwj OGL  169407543 Apr  7 17:30 RYF4.ChileMAC.fbDv.anno.ChileMAC.ar.tsv
--rw-rw---- 1 vanettenwj OGL 1749232108 Apr  7 17:30 RYF4.ChileMAC.fbDv.anno.ChileMAC.bcf
--rw-rw---- 1 vanettenwj OGL  250949259 Apr  7 17:30 RYF4.ChileMAC.fbDv.anno.ChileMAC.comphets.tsv
--rw-rw---- 1 vanettenwj OGL      37160 Apr  7 17:30 RYF4.ChileMAC.fbDv.anno.ChileMAC.denovo.tsv
--rw-rw---- 1 vanettenwj OGL      28534 Apr  7 17:30 RYF4.ChileMAC.fbDv.anno.ChileMAC.xdenovo.tsv
--rw-rw---- 1 vanettenwj OGL    7392919 Apr  7 17:30 RYF4.ChileMAC.fbDv.anno.ChileMAC.xd.tsv
--rw-rw---- 1 vanettenwj OGL   10223949 Apr  7 17:30 RYF4.ChileMAC.fbDv.anno.ChileMAC.xr.tsv
+[vanettenwj@biowulf ChileMAC]$ ls -l
+total 20181208
+-rw-r-----. 1 vanettenwj OGL 4713444568 Mar 31 15:20 ChileMAC.fbDv.anno.vcf.gz
+-rw-rw----. 1 vanettenwj OGL    2536226 Mar 31 15:32 ChileMAC.fbDv.anno.vcf.gz.tbi
+-rw-r-----. 1 vanettenwj OGL        274 Apr  8 19:31 ChileMAC.ped
+-rw-rw----. 1 vanettenwj OGL      20388 Apr  9 17:58 RYF1.ChileMAC.fbDv.anno.ChileMAC.ad.tsv
+-rw-rw----. 1 vanettenwj OGL   12864451 Apr  9 17:58 RYF1.ChileMAC.fbDv.anno.ChileMAC.ar.tsv
+-rw-rw----. 1 vanettenwj OGL  476821980 Apr  9 17:58 RYF1.ChileMAC.fbDv.anno.ChileMAC.bcf
+-rw-rw----. 1 vanettenwj OGL   86691980 Apr  9 17:58 RYF1.ChileMAC.fbDv.anno.ChileMAC.comphets.tsv
+-rw-rw----. 1 vanettenwj OGL      20538 Apr  9 17:58 RYF1.ChileMAC.fbDv.anno.ChileMAC.denovo.tsv
+-rw-rw----. 1 vanettenwj OGL 3291851834 Apr  9 17:58 RYF1.ChileMAC.fbDv.anno.ChileMAC.in.bcf
+-rw-rw----. 1 vanettenwj OGL        118 Apr  9 17:58 RYF1.ChileMAC.fbDv.anno.ChileMAC.ped
+-rw-rw----. 1 vanettenwj OGL       2229 Apr  9 17:58 RYF1.ChileMAC.fbDv.anno.ChileMAC.xdenovo.tsv
+-rw-rw----. 1 vanettenwj OGL        121 Apr  9 17:58 RYF1.ChileMAC.fbDv.anno.ChileMAC.xd.tsv
+-rw-rw----. 1 vanettenwj OGL      17451 Apr  9 17:58 RYF1.ChileMAC.fbDv.anno.ChileMAC.xr.tsv
+-rw-rw----. 1 vanettenwj OGL   78163874 Apr  9 18:35 RYF2.ChileMAC.fbDv.anno.ChileMAC.ad.tsv
+-rw-rw----. 1 vanettenwj OGL   24154521 Apr  9 18:35 RYF2.ChileMAC.fbDv.anno.ChileMAC.ar.tsv
+-rw-rw----. 1 vanettenwj OGL  476797064 Apr  9 18:35 RYF2.ChileMAC.fbDv.anno.ChileMAC.bcf
+-rw-rw----. 1 vanettenwj OGL   85566130 Apr  9 18:35 RYF2.ChileMAC.fbDv.anno.ChileMAC.comphets.tsv
+-rw-rw----. 1 vanettenwj OGL        121 Apr  9 18:35 RYF2.ChileMAC.fbDv.anno.ChileMAC.denovo.tsv
+-rw-rw----. 1 vanettenwj OGL 3290054106 Apr  9 18:35 RYF2.ChileMAC.fbDv.anno.ChileMAC.in.bcf
+-rw-rw----. 1 vanettenwj OGL        118 Apr  9 18:35 RYF2.ChileMAC.fbDv.anno.ChileMAC.ped
+-rw-rw----. 1 vanettenwj OGL        121 Apr  9 18:35 RYF2.ChileMAC.fbDv.anno.ChileMAC.xdenovo.tsv
+-rw-rw----. 1 vanettenwj OGL    3131829 Apr  9 18:35 RYF2.ChileMAC.fbDv.anno.ChileMAC.xd.tsv
+-rw-rw----. 1 vanettenwj OGL      54402 Apr  9 18:35 RYF2.ChileMAC.fbDv.anno.ChileMAC.xr.tsv
+-rw-rw----. 1 vanettenwj OGL  166799424 Apr  9 18:34 RYF3.ChileMAC.fbDv.anno.ChileMAC.ad.tsv
+-rw-rw----. 1 vanettenwj OGL  116311370 Apr  9 18:34 RYF3.ChileMAC.fbDv.anno.ChileMAC.ar.tsv
+-rw-rw----. 1 vanettenwj OGL  768859402 Apr  9 18:34 RYF3.ChileMAC.fbDv.anno.ChileMAC.bcf
+-rw-rw----. 1 vanettenwj OGL        121 Apr  9 18:34 RYF3.ChileMAC.fbDv.anno.ChileMAC.comphets.tsv
+-rw-rw----. 1 vanettenwj OGL        121 Apr  9 18:34 RYF3.ChileMAC.fbDv.anno.ChileMAC.denovo.tsv
+-rw-rw----. 1 vanettenwj OGL 3214293415 Apr  9 18:34 RYF3.ChileMAC.fbDv.anno.ChileMAC.in.bcf
+-rw-rw----. 1 vanettenwj OGL         97 Apr  9 18:34 RYF3.ChileMAC.fbDv.anno.ChileMAC.ped
+-rw-rw----. 1 vanettenwj OGL        121 Apr  9 18:34 RYF3.ChileMAC.fbDv.anno.ChileMAC.xdenovo.tsv
+-rw-rw----. 1 vanettenwj OGL    4260159 Apr  9 18:34 RYF3.ChileMAC.fbDv.anno.ChileMAC.xd.tsv
+-rw-rw----. 1 vanettenwj OGL    7974848 Apr  9 18:34 RYF3.ChileMAC.fbDv.anno.ChileMAC.xr.tsv
+-rw-rw----. 1 vanettenwj OGL      17795 Apr  9 17:58 RYF4.ChileMAC.fbDv.anno.ChileMAC.ad.tsv
+-rw-rw----. 1 vanettenwj OGL   16077564 Apr  9 17:58 RYF4.ChileMAC.fbDv.anno.ChileMAC.ar.tsv
+-rw-rw----. 1 vanettenwj OGL  457869465 Apr  9 17:58 RYF4.ChileMAC.fbDv.anno.ChileMAC.bcf
+-rw-rw----. 1 vanettenwj OGL   78691391 Apr  9 17:58 RYF4.ChileMAC.fbDv.anno.ChileMAC.comphets.tsv
+-rw-rw----. 1 vanettenwj OGL      16743 Apr  9 17:58 RYF4.ChileMAC.fbDv.anno.ChileMAC.denovo.tsv
+-rw-rw----. 1 vanettenwj OGL 3289973000 Apr  9 17:58 RYF4.ChileMAC.fbDv.anno.ChileMAC.in.bcf
+-rw-rw----. 1 vanettenwj OGL        118 Apr  9 17:58 RYF4.ChileMAC.fbDv.anno.ChileMAC.ped
+-rw-rw----. 1 vanettenwj OGL      26426 Apr  9 17:58 RYF4.ChileMAC.fbDv.anno.ChileMAC.xdenovo.tsv
+-rw-rw----. 1 vanettenwj OGL       1173 Apr  9 17:58 RYF4.ChileMAC.fbDv.anno.ChileMAC.xd.tsv
+-rw-rw----. 1 vanettenwj OGL    2177611 Apr  9 17:58 RYF4.ChileMAC.fbDv.anno.ChileMAC.xr.tsv
 ```
 
 # Quick-ish Test Start Using Demo vcf

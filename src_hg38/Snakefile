@@ -1247,33 +1247,32 @@ rule query_slivar_sample:
 			slivar tsv -p {output.pedigree} -s x_recessive {output.bcf} > {output.xr}
 		"""
 
-# 	localrules: query_gemini_family
-rule filter_slivar_family:
-	input:
-		bcf = "{family_name}.{sample}.{ped}.bcf",
-		pedigree = "{family_name}.{sample}.{ped}.ped",
-	output:
-		denovo = "{family_name}.{sample}.{ped}.denovo.tsv",
-		ad = "{family_name}.{sample}.{ped}.ad.tsv",
-		ar = "{family_name}.{sample}.{ped}.ar.tsv",
-		comphets = "{family_name}.{sample}.{ped}.comphets.tsv",
-		xdenovo = "{family_name}.{sample}.{ped}.xdenovo.tsv",
-		xd = "{family_name}.{sample}.{ped}.xd.tsv",
-		xr = "{family_name}.{sample}.{ped}.xr.tsv",
-	shell:
-		"""
-		if [[ $(module list 2>&1 | grep "slivar" | wc -l) < 1 ]]; then module load {config[slivar_version]}; fi
-		# mkdir -p /lscratch/$SLURM_JOB_ID
-		# cp {input} /lscratch/$SLURM_JOB_ID/.
-		# WKDIR=/lscratch/$SLURM_JOB_ID
-			slivar tsv -p {input.pedigree} -s denovo {input.bcf} > {output.denovo}
-			slivar tsv -p {input.pedigree} -s dominant {input.bcf} > {output.ad}
-			slivar tsv -p {input.pedigree} -s recessive {input.bcf} > {output.ar}
-			slivar tsv -p {input.pedigree} -s comphet_side {input.bcf} > {output.comphets}
-			slivar tsv -p {input.pedigree} -s x_denovo {input.bcf} > {output.xdenovo}
-			slivar tsv -p {input.pedigree} -s x_dominant {input.bcf} > {output.xd}
-			slivar tsv -p {input.pedigree} -s x_recessive {input.bcf} > {output.xr}
-		"""
+# rule filter_slivar_family:
+# 	input:
+# 		bcf = "{family_name}.{sample}.{ped}.bcf",
+# 		pedigree = "{family_name}.{sample}.{ped}.ped",
+# 	output:
+# 		denovo = "{family_name}.{sample}.{ped}.denovo.tsv",
+# 		ad = "{family_name}.{sample}.{ped}.ad.tsv",
+# 		ar = "{family_name}.{sample}.{ped}.ar.tsv",
+# 		comphets = "{family_name}.{sample}.{ped}.comphets.tsv",
+# 		xdenovo = "{family_name}.{sample}.{ped}.xdenovo.tsv",
+# 		xd = "{family_name}.{sample}.{ped}.xd.tsv",
+# 		xr = "{family_name}.{sample}.{ped}.xr.tsv",
+# 	shell:
+# 		"""
+# 		if [[ $(module list 2>&1 | grep "slivar" | wc -l) < 1 ]]; then module load {config[slivar_version]}; fi
+# 		# mkdir -p /lscratch/$SLURM_JOB_ID
+# 		# cp {input} /lscratch/$SLURM_JOB_ID/.
+# 		# WKDIR=/lscratch/$SLURM_JOB_ID
+# 			slivar tsv -p {input.pedigree} -s denovo {input.bcf} > {output.denovo}
+# 			slivar tsv -p {input.pedigree} -s dominant {input.bcf} > {output.ad}
+# 			slivar tsv -p {input.pedigree} -s recessive {input.bcf} > {output.ar}
+# 			slivar tsv -p {input.pedigree} -s comphet_side {input.bcf} > {output.comphets}
+# 			slivar tsv -p {input.pedigree} -s x_denovo {input.bcf} > {output.xdenovo}
+# 			slivar tsv -p {input.pedigree} -s x_dominant {input.bcf} > {output.xd}
+# 			slivar tsv -p {input.pedigree} -s x_recessive {input.bcf} > {output.xr}
+# 		"""
 
 localrules: sortGeminiFamily
 rule sortGeminiFamily:
