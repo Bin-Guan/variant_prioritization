@@ -1233,7 +1233,7 @@ rule query_slivar_sample:
 			--family-expr 'denovo:fam.every(segregating_denovo)' \
 			--family-expr 'dominant:fam.every(segregating_dominant)' \
 			--family-expr 'recessive:fam.every(segregating_recessive)' \
-			--trio 'comphet_side:comphet_side(kid, mom, dad) && variant.priority_score >= 4' \
+			--trio 'comphet_side:comphet_side(kid, mom, dad) && kid.priority_score >= 4 && mom.priority_score >= 4 && dad.priority_score >= 4' \
 			--family-expr 'x_denovo:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_denovo_x)' \
 			--family-expr 'x_dominant:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_dominant_x)' \
 			--family-expr 'x_recessive:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_recessive_x)' \
