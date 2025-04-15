@@ -1230,13 +1230,13 @@ rule query_slivar_sample:
 			--ped {output.pedigree} \
 			--pass-only \
 			--info 'variant.FILTER == "PASS" && variant.ALT[0] != "*"' \
-			--family-expr 'denovo:fam.every(segregating_denovo)' \
-			--family-expr 'dominant:fam.every(segregating_dominant)' \
-			--family-expr 'recessive:fam.every(segregating_recessive)' \
+			--family-expr 'denovo:fam.every(segregating_denovo) && kid.priority_score >= 3 && mom.priority_score >= 3 && dad.priority_score >= 3' \
+			--family-expr 'dominant:fam.every(segregating_dominant) && kid.priority_score >= 3 && mom.priority_score >= 3 && dad.priority_score >= 3' \
+			--family-expr 'recessive:fam.every(segregating_recessive) && kid.priority_score >= 3 && mom.priority_score >= 3 && dad.priority_score >= 3' \
 			--trio 'comphet_side:comphet_side(kid, mom, dad) && kid.priority_score >= 4 && mom.priority_score >= 4 && dad.priority_score >= 4' \
-			--family-expr 'x_denovo:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_denovo_x)' \
-			--family-expr 'x_dominant:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_dominant_x)' \
-			--family-expr 'x_recessive:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_recessive_x)' \
+			--family-expr 'x_denovo:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_denovo_x) && kid.priority_score >= 3 && mom.priority_score >= 3 && dad.priority_score >= 3' \
+			--family-expr 'x_dominant:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_dominant_x) && kid.priority_score >= 3 && mom.priority_score >= 3 && dad.priority_score >= 3' \
+			--family-expr 'x_recessive:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_recessive_x) && kid.priority_score >= 3 && mom.priority_score >= 3 && dad.priority_score >= 3' \
 			-o {output.bcf}
 			slivar tsv -p {output.pedigree} -s denovo {output.bcf} > {output.denovo}
 			slivar tsv -p {output.pedigree} -s dominant {output.bcf} > {output.ad}
