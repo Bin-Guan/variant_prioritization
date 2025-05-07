@@ -1,4 +1,4 @@
-input_vcf: 'RY.vcf.gz' #bcf also accepted.
+input_vcf: 'RY.fbDv.vcf.gz' #bcf also accepted.
 # input_vcf: 'test_trio.vcf.gz' #bcf also accepted.
 gatk3: 'FALSE' # FALSE if using freebayes or deepvariant vcf.
 aaf_change: '1.1'
