@@ -299,6 +299,7 @@ else:
 			/data/OGL/resources/git/slivar expr \
 				--gnotate /data/OGL/resources/git/topmed.hg38.dbsnp.151.zip \
 				-v {output.bcf}	\
+				| sed 's#0/0:10:10:10,0,#0/0:10:10:10,#g' \
 				| bgzip -f > /lscratch/$SLURM_JOB_ID/$(basename {output.vcf})
 			tabix -f -p vcf /lscratch/$SLURM_JOB_ID/$(basename {output.vcf})
 			if [[ $(module list 2>&1 | grep "vcfanno" | wc -l) < 1 ]]; then module load {config[vcfanno_version]}; fi
@@ -307,6 +308,7 @@ else:
 			 	| sed 's/Number=A/Number=1/g' | bgzip > {output.vcf}
 			tabix -f -p vcf {output.vcf}
 			"""
+#sed 's#0/0:10:10:10,0,#0/0:10:10:10,#g' added on 5/22/2025 to fix an error in the variant_calling step.
 #clinvar in this step by vcfanno
 #slivar annotated
 #INFO=<ID=gnomad_popmax_af,Number=1,Type=Float,Description="field from from gnotate VCF">
