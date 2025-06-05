@@ -1231,7 +1231,7 @@ rule query_slivar_sample:
 			--pass-only \
 			--info '(INFO.priority_score >= 3) && variant.FILTER == "PASS" && variant.ALT[0] != "*"' \
 			--family-expr 'denovo:fam.every(segregating_denovo)' \
-			--family-expr 'dominant:fam.every(fam.kid.het && ((fam.mom.hom_ref && fam.dad.het) || (fam.dad.hom_ref && fam.mom.het)))' \
+			--family-expr 'dominant:fam.every(fam.kid.het && ((fam.mom.hom_ref && fam.dad.het && fam.dad.affected) || (fam.dad.hom_ref && fam.mom.het && fam.mom.affected)))' \
 			--family-expr 'recessive:fam.every(segregating_recessive)' \
 			--trio 'comphet_side:comphet_side(kid, mom, dad) && INFO.priority_score >= 6' \
 			--family-expr 'x_denovo:(variant.CHROM == "X" || variant.CHROM == "chrX") && fam.every(segregating_denovo_x)' \
