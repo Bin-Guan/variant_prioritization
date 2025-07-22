@@ -126,3 +126,18 @@ function split(s, delimiter)
     end
     return result;
 end
+
+function maxAbsoluteValue(vals)
+    local maxVal = tonumber(vals[1])
+    local maxAbs = math.abs(tonumber(vals[1]))
+    for i = 2, #vals do
+        local absValue = math.abs(tonumber(vals[i]))
+        if absValue > maxAbs then
+            maxAbs = absValue
+            maxVal = tonumber(vals[i])
+        end
+    end
+    return maxVal
+end
+
+-- ops=['lua:maxAbsoluteValue(vals)']

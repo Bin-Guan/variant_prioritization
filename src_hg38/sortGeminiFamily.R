@@ -38,6 +38,7 @@ sortFilterGemini <- function(fileName) {
     InheritanceTest_rearrangeCol <- left_join(InheritanceTest_max_priority_score1, panelGene, by = c("ref_gene")) %>% 
       mutate(note = "") %>% separate(vcf_id, c('caller', 'hg38_id'), sep = "_") %>% 
       mutate(hg38_pos = sub("[ACGT]*>[ACGT]*", "", hg38_id)) %>%
+      mutate(gno2e3g_hemi = ifelse(gno2x_nonpar + gno3_nonpar == 0, NA, ifelse(gno2x_nonpar == 0, 0, gno2x_ac_xy) + ifelse(gno3_nonpar == 0, 0, round(gno3_an_xy * gno3_af_xy, 0) ) )) %>% 
       mutate(gno2e3g_hom = ifelse(is.na(gno2x_hom) & is.na(gno3_nhomalt), NA, ifelse(is.na(gno2x_hom), 0, gno2x_hom) + ifelse(is.na(gno3_nhomalt), 0, gno3_nhomalt) ), 
              gno2e3g_ac = ifelse(is.na(gno2x_ac_all) & is.na(gno3_ac_all), NA, ifelse(is.na(gno2x_ac_all), 0, gno2x_ac_all) + ifelse(is.na(gno3_ac_all), 0, gno3_ac_all) ), 
              gno2e3g_an = ifelse(is.na(gno2x_an_all) & is.na(gno3_an_all), NA, ifelse(is.na(gno2x_an_all), 0, gno2x_an_all) + ifelse(is.na(gno3_an_all), 0, gno3_an_all) )) %>% 
@@ -60,28 +61,28 @@ sortFilterGemini <- function(fileName) {
                                  TRUE ~ 0)) %>% 
       select(-gno2x_expected_an, -gno3_expected_an) %>%
       mutate(aaf = round(aaf, 3),
-             gno2x_af_all = round(gno2x_af_all, 5),
-             gno3_af_all = round(gno3_af_all, 5),
-             max_af = round(max_af, 5),
+             gno2x_af_all = round(gno2x_af_all, 6),
+             gno3_af_all = round(gno3_af_all, 6),
+             max_af = round(max_af, 6),
              af_oglx = round(af_oglx, 5),
              af_oglg = round(af_oglg, 5),
              pli = round(pli, 3),
              loeuf = round(loeuf, 2),
              mis_z = round(mis_z, 2),
-             gno2e3g_af = round(gno2e3g_af,5),
+             gno2e3g_af = round(gno2e3g_af,6),
              gnomad_nc_constraint = round(gnomad_nc_constraint,2)) %>%
       unite("hgmd", hgmd_class, hgmd_id, na.rm = TRUE, remove = FALSE) %>% 
       select('ref_gene', 'chr_variant_id','hg38_pos', 'family_id','family_members', 'family_genotypes', 'samples','aaf', 'caller',
              'panel_class', 'priority_score', 'prscore_intervar', 'clinvar_hgmd_score', 'splice_score', 'insilico_score', 
-             exonicfunc_refgenewithver, mane_select, 'refgenewithver','exon','aa_length','intron','omim_inheritance','omim_phen',hgmd,clnsig,clnsigconf, 
-             gno2x_af_all,gno3_af_all,'gno2e3g_acan', 'gno2e3g_hom','max_af', 'max_af_pops',af_oglx,af_oglg,'interpro_domain', 'pfam_domain','note',
-             'gene','hgvsc','hgvsp', 'oe_lof_upper_bin','pli','loeuf','mis_z','pnull','prec', 'rmsk', 'am_pathogenicity','am_class','spliceai','spliceai_maxscore','spliceaimasked50','spliceaimasked50max',
-             'grch37variant_id','qual',
-             gno2x_filter,gno3_filter,func_refgenewithver,'omim_gene','hgmd_id','hgmd_class', 'hgmd_phen', hgmd_overlap4aa, 'existing_variation',clnid, clnalleleid,'clin_sig', clnrevstat, clndn, clndisdb, 
+             exonicfunc_refgenewithver, 'refgenewithver',mane_select,'gene','hgvsc','hgvsp','exon','aa_length','intron','omim_inheritance','omim_phen',hgmd,clnsig,clnsigconf,'note', 
+             gno2x_af_all,gno3_af_all,'gno2e3g_acan', 'gno2e3g_hom',gno2e3g_hemi,'max_af', 'max_af_pops',af_oglx,af_oglg,'interpro_domain', 'pfam_domain', 
+             'oe_lof_upper_bin','pli','loeuf','mis_z','pnull','prec', 'rmsk', 
+             promoterai, 'am_pathogenicity','am_class','spliceai','spliceai_maxscore','spliceaimasked50','spliceaimasked50max',
+             'grch37variant_id','qual',gt_depths,gt_quals,gno2x_filter,gno3_filter,func_refgenewithver,'omim_gene','hgmd_id','hgmd_class', 'hgmd_phen', hgmd_overlap4aa, 'existing_variation',clnid, clnalleleid,'clin_sig', clnrevstat, clndn, clndisdb, 
              intervar_and_evidence, 'pvs1', 'truncating_vep', 'gno2e3g_af','pmaxaf', ac_oglx, ac_hom_oglx, an_oglx, ac_oglg, ac_hom_oglg, an_oglg, 'existing_inframe_oorfs','existing_outofframe_oorfs','existing_uorfs','five_prime_utr_variant_annotation','five_prime_utr_variant_consequence',
              'squirls_interpretation', 'squirls_maxscore', 'squirls_score', 'dbscsnv_ada_score', 'dbscsnv_rf_score', 'regsnp_fpr','regsnp_disease','regsnp_splicing_site','dpsi_max_tissue', 'dpsi_zscore', 'genesplicer', 'maxentscan_diff', 'branchpoint_prob', 'labranchor_score', 'regsnp_fpr','regsnp_disease','regsnp_splicing_site',  
              'sift_pred', 'polyphen_pred', 'mutscore', 'mutationassessor_pred', 'mutationtaster_pred', 'metasvm_pred','metasvm_score', 'clinpred_score', 'primateai_rankscore', 'revel_score', hmc_score, 'ccr_pct','mpc_score', 'mtr_score', 'mtr_fdr', 'mtr_pct', 'cadd_raw', 'cadd_phred','remm', 'fathmm_xf_coding_score','fathmm_xf_noncoding','eigen_pc_raw_coding', 'gerpplus_rs', 'phylop100way_vertebrate', 
-             gnomad_nc_constraint, 'atac_rpe_score','atac_rpe_itemrgb', 'ft_ret_rpe_score', cherry_sum_score, 'gene_refgenewithver', 'avsnp150', 'tfbs',  'sigmaaf_lof_0001', 'sigmaaf_lof_01', 'sigmaaf_missense_0001', 'sigmaaf_missense_01',
+             gnomad_nc_constraint, 'atac_rpe_score','atac_rpe_itemrgb', 'ft_ret_rpe_score', cherry_sum_score, 'gene_refgenewithver', 'avsnp150', 'tfbs',  'sigmaaf_lof_0001', 'sigmaaf_lof_01', 'sigmaaf_missense_0001', 'sigmaaf_missense_01',  
              'eyeintegration_rpe_adulttissue', 'eyeintegration_rpe_cellline', 'eyeintegration_rpe_fetaltissue', 'eyeintegration_rpe_stemcellline', 'eyeintegration_retina_adulttissue', 'eyeintegration_retina_stemcellline', 'eyeintegration_wholeblood', 
              'pubmed','sift_score', 'polyphen_score', 'metasvm_rankscore', 'metasvm_score', 'provean_score', 'provean_converted_rankscore',	'provean_pred',
              'f1000g2015aug_all','esp6500siv2_all',gno2_xg_ratio:gno3_popmax, 'syn_z', everything() ) %>%

@@ -35,6 +35,7 @@ else
 	snakefile="/home/$USER/git/variant_prioritization/src_hg38/Snakefile"
 fi
 
+sed -i 's/\r$//' $(grep "^ped:" $1 | head -n 1 | cut -d"'" -f 2)
 # add json file to config file if needed.
 #if [ ! -z "$3" ]; then
 #	json="$3"
@@ -58,10 +59,15 @@ snakemake -s $snakefile \
 # --unlock
 
 WORK_DIR=$PWD
-echo "variant_prioritization.git.in.OGL_resources: '$(head -n 1 /data/OGL/resources/variant_prioritization.git.log)'" >> $1
-echo "variant_prioritization.git.in.OGL_resources.date: '$(cat /data/OGL/resources/variant_prioritization.git.log | head -n 3 | tail -n 1 | sed s/"^Date:   "//)'" >> $1
-cd ~/git/variant_prioritization
-git log | head -n 5 > $WORK_DIR/variant_prioritization.git.log
-cd $WORK_DIR
-echo "variant_prioritization.git: '$(cat variant_prioritization.git.log | head -n 1)'" >> $1
-echo "variant_prioritization.git.date: '$(cat variant_prioritization.git.log | head -n 3 | tail -n 1 | sed s/"^Date:   "//)'" >> $1
+check=$(echo $@ | grep "dryrun\|dry-run\|unlock" | wc -l)
+if (( $check > 0 )); then
+	echo "Argument contains unlock or dry-run"
+else
+	echo "variant_prioritization.git.in.OGL_resources: '$(head -n 1 /data/OGL/resources/variant_prioritization.git.log)'" >> $1
+	echo "variant_prioritization.git.in.OGL_resources.date: '$(cat /data/OGL/resources/variant_prioritization.git.log | head -n 3 | tail -n 1 | sed s/"^Date:   "//)'" >> $1
+	cd ~/git/variant_prioritization
+	git log | head -n 5 > $WORK_DIR/variant_prioritization.git.log
+	cd $WORK_DIR
+	echo "variant_prioritization.git: '$(cat variant_prioritization.git.log | head -n 1)'" >> $1
+	echo "variant_prioritization.git.date: '$(cat variant_prioritization.git.log | head -n 3 | tail -n 1 | sed s/"^Date:   "//)'" >> $1
+fi

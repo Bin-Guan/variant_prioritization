@@ -104,7 +104,12 @@ ps_df <-  left_join(ps_df_crossmap, squirls_pangolin_annotation, by="variantkey"
   mutate(truncating_vep = ifelse(grepl("frameshift_variant|splice_acceptor_variant|splice_donor_variant|start_lost|stop_gained|stop_lost", CSQ, ignore.case = TRUE), 1, 0)) %>% 
   mutate(temp_CSQ = CSQ) %>% 
   separate_rows(temp_CSQ, sep = "\\,") %>%
-  separate(temp_CSQ, c('allele','consequence','codons','amino_acids','gene','symbol','MANE_SELECT','feature','exon','intron','hgvsc','hgvsp','max_af','max_af_pops','protein_position','biotype','canonical','domains','existing_variation','clin_sig','pick','pubmed','phenotypes','sift','polyphen','cadd_raw','cadd_phred','genesplicer','spliceregion','MaxEntScan_alt','maxentscan_diff','MaxEntScan_ref','existing_inframe_oorfs','existing_outofframe_oorfs','existing_uorfs','five_prime_utr_variant_annotation','five_prime_utr_variant_consequence','MOTIF_NAME','MOTIF_POS','HIGH_INF_POS','MOTIF_SCORE_CHANGE','am_class','am_pathogenicity'), sep = "\\|", remove = TRUE, convert = TRUE) %>% 
+  separate(temp_CSQ, c('allele','consequence','codons','amino_acids','gene','symbol','MANE','MANE_SELECT','MANE_PLUS_CLINICAL',
+                       'feature','exon','intron','hgvsc','hgvsp','max_af','max_af_pops','protein_position','biotype','canonical',
+                       'domains','existing_variation','clin_sig','pick','pubmed','phenotypes','sift','polyphen','cadd_raw','cadd_phred',
+                       'genesplicer','spliceregion','MaxEntScan_alt','maxentscan_diff','MaxEntScan_ref','existing_inframe_oorfs','existing_outofframe_oorfs','existing_uorfs','five_prime_utr_variant_annotation','five_prime_utr_variant_consequence',
+                       'MOTIF_NAME','MOTIF_POS','HIGH_INF_POS','MOTIF_SCORE_CHANGE','am_class','am_pathogenicity','REFSEQ_MATCH','BAM_EDIT','SOURCE'), 
+           sep = "\\|", remove = TRUE, convert = TRUE) %>% 
   #gno2x_af_all,gno3_af_all,maxaf_annovar,gno2x_af_popmax,gno3_popmax,gno_gx_ratio,gno2x_an_all,gno3_an_all,gno2x_filter,gno3_filter AND max_af above from VEP.
   mutate(temp_genesplicer = case_when(grepl("High", genesplicer) ~ 3,
                                       grepl("Medium", genesplicer) ~ 1,
@@ -129,10 +134,10 @@ ps_df <-  left_join(ps_df_crossmap, squirls_pangolin_annotation, by="variantkey"
   mutate(gno2x_filter = ifelse(gno2x_an_all > 0 & is.na(gno2x_filter) & gno2x_an_all < gno2x_expected_an/2, "Less50", gno2x_filter),
          gno3_filter = ifelse(gno3_an_all > 0 & is.na(gno3_filter) & gno3_an_all < gno3_expected_an/2, "Less50", gno3_filter) ) %>% 
   replace_na(list(gno2x_af_all=0, gno3_af_all=0, gno2x_af_popmax=0, gno3_maxaf = 0, esp6500siv2_all = 0, f1000g2015aug_all = 0)) %>% 
-  mutate(pmaxaf = case_when(is.na(gno2x_filter) & !is.na(gno3_filter) ~ pmax(gno2x_af_all, gno2x_af_popmax, max_af, na.rm = TRUE),
+  mutate(pmaxaf = case_when(is.na(gno2x_filter) & !is.na(gno3_filter) ~ pmax(gno2x_af_all, gno2x_af_popmax, na.rm = TRUE),
                             !is.na(gno2x_filter) & is.na(gno3_filter) ~ pmax(gno3_af_all, gno3_maxaf, na.rm = TRUE),
                             !is.na(gno2x_filter) & !is.na(gno3_filter) ~ pmax(esp6500siv2_all,f1000g2015aug_all, na.rm = TRUE),
-                            TRUE ~ pmax(gno2x_af_all, gno3_af_all, gno2x_af_popmax, gno3_maxaf, max_af, na.rm = TRUE))) %>% 
+                            TRUE ~ pmax(gno2x_af_all, gno3_af_all, gno2x_af_popmax, gno3_maxaf, na.rm = TRUE))) %>% 
   replace_na(list(pmaxaf=0)) %>% 
   #unite("temp_clinvar", CLNSIG, clin_sig, sep = "-", remove = FALSE ) %>% 
   #mutate(temp_clinvar = gsub("_of_pathogenicity", "", temp_clinvar)) %>% 
@@ -173,7 +178,12 @@ ps_df <-  left_join(ps_df_crossmap, squirls_pangolin_annotation, by="variantkey"
            ifelse(is.na(fathmm_xf_noncoding), 0, ifelse(fathmm_xf_noncoding > 0.6 & pmaxaf < 0.02, 0.5, 0)) + 
            ifelse(is.na(hmc_score), 0, ifelse(hmc_score < 0.8, 0.5, 0)) +
            ifelse(is.na(gnomad_nc_constraint), 0, ifelse(gnomad_nc_constraint > 4 & pmaxaf < 0.01, 0.5, 0)) +
-           ifelse(grepl("likely_pathogenic", am_class), 0.5, 0)) %>% 
+           ifelse(grepl("likely_pathogenic", am_class), 0.5, 0) +
+           ifelse(is.na(promoterAI) | pmaxaf > 0.02, 0, case_when(abs(promoterAI) > 0.8 ~ 6,
+                                                                  abs(promoterAI) > 0.5 ~ 3,
+                                                                  abs(promoterAI) > 0.2 ~ 1,
+                                                                  abs(promoterAI) > 0.1 ~ 0.5,
+                                                                  TRUE ~ 0))) %>% 
   replace_na(list(clinvar_hgmd_score=0, insilico_score=0, SigmaAF_Missense_0001=0,
                   spliceai_rank=0, pangolin_max=0)) %>% 
   mutate(temp_mis_z = mis_z, temp_dpsi_max_tissue = dpsi_max_tissue, temp_dpsi_zscore = dpsi_zscore) %>% 
