@@ -44,6 +44,19 @@ sed -i 's/\r$//' $(grep "^ped:" $1 | head -n 1 | cut -d"'" -f 2)
 #	json="/home/$USER/git/variant_prioritization/src_hg38/cluster.json"
 #fi
 
+WORK_DIR=$PWD
+check=$(echo $@ | grep "dryrun\|dry-run\|unlock" | wc -l)
+if (( $check > 0 )); then
+	echo "Argument contains unlock or dry-run"
+else
+	if [ -e ../*.yaml ]; then
+		tail -n 1 ../*.yaml >> $WORK_DIR/$1
+	fi
+	cd ~/git/variant_prioritization
+	echo "variant_prioritization.git version: '$(git describe --tags --abbrev=0)'" >> $WORK_DIR/$1
+	cd $WORK_DIR
+fi
+
 snakemake -s $snakefile \
 -pr --local-cores 4 --jobs 1999 --max-jobs-per-second 1 \
 --cluster-config $json \
@@ -57,17 +70,3 @@ snakemake -s $snakefile \
 # --notemp Ignore temp() declaration;
 # --dryrun
 # --unlock
-
-WORK_DIR=$PWD
-check=$(echo $@ | grep "dryrun\|dry-run\|unlock" | wc -l)
-if (( $check > 0 )); then
-	echo "Argument contains unlock or dry-run"
-else
-	echo "variant_prioritization.git.in.OGL_resources: '$(head -n 1 /data/OGL/resources/variant_prioritization.git.log)'" >> $1
-	echo "variant_prioritization.git.in.OGL_resources.date: '$(cat /data/OGL/resources/variant_prioritization.git.log | head -n 3 | tail -n 1 | sed s/"^Date:   "//)'" >> $1
-	cd ~/git/variant_prioritization
-	git log | head -n 5 > $WORK_DIR/variant_prioritization.git.log
-	cd $WORK_DIR
-	echo "variant_prioritization.git: '$(cat variant_prioritization.git.log | head -n 1)'" >> $1
-	echo "variant_prioritization.git.date: '$(cat variant_prioritization.git.log | head -n 3 | tail -n 1 | sed s/"^Date:   "//)'" >> $1
-fi
