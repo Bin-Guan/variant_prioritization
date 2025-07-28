@@ -1105,11 +1105,11 @@ if config['datatype'].upper() in ["WGS", "GENOME"]:
 		input:
 			db = '{sample}.PED_{ped}.gemini.db'
 		output:
-			denovo = temp('temp/{family_name}.{sample}.{ped}.denovo.tsv'),
+			denovo = 'gemini_tsv/{family_name}.{sample}.{ped}.denovo.tsv',
 			ad = temp('temp/{family_name}.{sample}.{ped}.ad.tsv'),
 			ar = temp('temp/{family_name}.{sample}.{ped}.ar.tsv'),
-			comphets = temp('temp/{family_name}.{sample}.{ped}.comphets.tsv'),
-			xdenovo = temp('temp/{family_name}.{sample}.{ped}.xdenovo.tsv'),
+			comphets = 'gemini_tsv/{family_name}.{sample}.{ped}.comphets.tsv',
+			xdenovo = 'gemini_tsv/{family_name}.{sample}.{ped}.xdenovo.tsv',
 			xd = temp('temp/{family_name}.{sample}.{ped}.xd.tsv'),
 			xr = temp('temp/{family_name}.{sample}.{ped}.xr.tsv'),
 			mendel_errors = temp('temp/{family_name}.{sample}.{ped}.mendel_errors.tsv')
@@ -1148,11 +1148,11 @@ elif config['datatype'].upper() in ["EXOME", "WES"]:
 			input:
 				db = '{sample}.PED_{ped}.gemini.db'
 			output:
-				denovo = temp('temp/{family_name}.{sample}.{ped}.denovo.tsv'),
+				denovo = 'gemini_tsv/{family_name}.{sample}.{ped}.denovo.tsv',
 				ad = temp('temp/{family_name}.{sample}.{ped}.ad.tsv'),
 				ar = temp('temp/{family_name}.{sample}.{ped}.ar.tsv'),
-				comphets = temp('temp/{family_name}.{sample}.{ped}.comphets.tsv'),
-				xdenovo = temp('temp/{family_name}.{sample}.{ped}.xdenovo.tsv'),
+				comphets = 'gemini_tsv/{family_name}.{sample}.{ped}.comphets.tsv',
+				xdenovo = 'gemini_tsv/{family_name}.{sample}.{ped}.xdenovo.tsv',
 				xd = temp('temp/{family_name}.{sample}.{ped}.xd.tsv'),
 				xr = temp('temp/{family_name}.{sample}.{ped}.xr.tsv'),
 				mendel_errors = temp('temp/{family_name}.{sample}.{ped}.mendel_errors.tsv')
@@ -1192,11 +1192,11 @@ else:
 		input:
 			db = '{sample}.PED_{ped}.gemini.db'
 		output:
-			denovo = temp('temp/{family_name}.{sample}.{ped}.denovo.tsv'),
+			denovo = 'gemini_tsv/{family_name}.{sample}.{ped}.denovo.tsv',
 			ad = temp('temp/{family_name}.{sample}.{ped}.ad.tsv'),
 			ar = temp('temp/{family_name}.{sample}.{ped}.ar.tsv'),
-			comphets = temp('temp/{family_name}.{sample}.{ped}.comphets.tsv'),
-			xdenovo = temp('temp/{family_name}.{sample}.{ped}.xdenovo.tsv'),
+			comphets = 'gemini_tsv/{family_name}.{sample}.{ped}.comphets.tsv',
+			xdenovo = 'gemini_tsv/{family_name}.{sample}.{ped}.xdenovo.tsv',
 			xd = temp('temp/{family_name}.{sample}.{ped}.xd.tsv'),
 			xr = temp('temp/{family_name}.{sample}.{ped}.xr.tsv'),
 			mendel_errors = temp('temp/{family_name}.{sample}.{ped}.mendel_errors.tsv')
@@ -1234,11 +1234,11 @@ else:
 localrules: sortGeminiFamily
 rule sortGeminiFamily:
 	input:
-		denovo = 'temp/{family_name}.{sample}.{ped}.denovo.tsv',
+		denovo = 'gemini_tsv/{family_name}.{sample}.{ped}.denovo.tsv',
 		ad = 'temp/{family_name}.{sample}.{ped}.ad.tsv',
 		ar = 'temp/{family_name}.{sample}.{ped}.ar.tsv',
-		comphets = 'temp/{family_name}.{sample}.{ped}.comphets.tsv',
-		xdenovo = 'temp/{family_name}.{sample}.{ped}.xdenovo.tsv',
+		comphets = 'gemini_tsv/{family_name}.{sample}.{ped}.comphets.tsv',
+		xdenovo = 'gemini_tsv/{family_name}.{sample}.{ped}.xdenovo.tsv',
 		xd = 'temp/{family_name}.{sample}.{ped}.xd.tsv',
 		xr = 'temp/{family_name}.{sample}.{ped}.xr.tsv',
 		mendel_errors = 'temp/{family_name}.{sample}.{ped}.mendel_errors.tsv'

@@ -60,6 +60,8 @@ sortFilterGemini <- function(fileName) {
                                  panel_class == "Dx-modifier-common" ~ 2,
                                  TRUE ~ 0)) %>% 
       select(-gno2x_expected_an, -gno3_expected_an) %>%
+      unite("temp_panel_class", panel_class, GenePhenotypeCategory, sep = "|", remove = TRUE, na.rm = TRUE) %>%
+      rename(panel_class = temp_panel_class) %>% 
       mutate(aaf = round(aaf, 3),
              gno2x_af_all = round(gno2x_af_all, 6),
              gno3_af_all = round(gno3_af_all, 6),
@@ -97,7 +99,8 @@ sortFilterGemini <- function(fileName) {
 #  mutate(ref_gene = ifelse(is.na(ref_gene), temp_genes_bed, ref_gene)) %>%
 #  select(-temp_genes_bed) %>%
   
-panelGene <- read_xlsx(geneCategory_file, sheet = "analysis", na = c("NA", "", "None", "NONE", ".")) %>% select(gene, panel_class) %>% rename(ref_gene = gene)
+panelGene <- read_xlsx(geneCategory_file, sheet = "analysis", na = c("NA", "", "None", "NONE", ".")) %>% 
+  select(gene, panel_class, GenePhenotypeCategory) %>% rename(ref_gene = gene) %>% distinct()
 blacklistGene <- read_xlsx(geneCategory_file, sheet = "IVA", na = c("NA", "", "None", "NONE", "."))  %>% filter(Blacklist == "Excluded") %>% pull(Gene)
 
 all <- data.frame()

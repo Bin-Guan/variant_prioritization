@@ -94,7 +94,7 @@ rm(gemini_input)
 panelGene <- read_xlsx(geneCategory_file, sheet = "analysis", na = c("NA", "", "None", "NONE", ".")) %>%
   #mutate(ref_gene = toupper(gene)) %>%
   rename(ref_gene = gene) %>% 
-  select(ref_gene, panel_class) %>% distinct()
+  select(ref_gene, panel_class, GenePhenotypeCategory) %>% distinct()
 blacklistGene <- read_xlsx(geneCategory_file, sheet = "IVA", na = c("NA", "", "None", "NONE", "."))  %>% filter(Blacklist == "Excluded") %>% pull(Gene)
 
 # get max_priority_score for each gene
@@ -128,6 +128,8 @@ gemini_rearrangeCol <- left_join(gemini_max_priority_score, panelGene, by = c("r
                              panel_class == "Dx-modifier-rare" ~ 0.8,
                              panel_class == "Dx-modifier-common" ~ 0.6,
                              TRUE ~ 0)) %>% 
+  unite("temp_panel_class", panel_class, GenePhenotypeCategory, sep = "|", remove = TRUE, na.rm = TRUE) %>%
+  rename(panel_class = temp_panel_class) %>% 
   select(-gno2x_expected_an, -gno3_expected_an) %>% 
   mutate(gt_alt_freqs = round(gt_alt_freqs,2),
          aaf = round(aaf, 3),
@@ -202,7 +204,9 @@ if (nrow(gemini_ref_var_input) == 0) {
                                panel_class == "Candidate" ~ 1,
                                panel_class == "Dx-modifier-rare" ~ 0.8,
                                panel_class == "Dx-modifier-common" ~ 0.6,
-                               TRUE ~ 0)) %>% 
+                               TRUE ~ 0)) %>%
+    unite("temp_panel_class", panel_class, GenePhenotypeCategory, sep = "|", remove = TRUE, na.rm = TRUE) %>%
+    rename(panel_class = temp_panel_class) %>%
     select(-gno2x_expected_an, -gno3_expected_an) %>% 
     mutate(gt_alt_freqs = round(gt_alt_freqs,2),
            aaf = round(aaf, 3),
@@ -296,6 +300,8 @@ if ( !file.exists(manta_file)) {
                                    ( SV_chrom %in% c("17", "chr17") & between(SV_start, 59105674, 59683460) ) | ( grepl("chr17|17", ALT) & between(as.numeric(gsub("\\D", "", ALT)), 59105674, 59683460) )  ~ 2.5,
                                    TRUE ~ 0)) %>% # GRCh38 coordinates
         arrange(desc(eyeGene), desc(ACMG_class)) %>% 
+        unite("temp_panel_class", panel_class, GenePhenotypeCategory, sep = "|", remove = TRUE, na.rm = TRUE) %>%
+        rename(panel_class = temp_panel_class) %>% 
         mutate(note = ifelse(SV_type == "BND" & ( ( SV_chrom %in% c("X", "chrX") & between(SV_start, 140420272, 140421278) | ( grepl("chrX|X", ALT) & between(as.numeric(gsub("\\D", "", ALT)), 140420272, 140421278) ) )), "XLFD", note)) %>% 
         mutate(note = ifelse(( SV_chrom %in% c("17", "chr17") & between(SV_start, 59105674, 59683460) ) | ( grepl("chr17|17", ALT) & between(as.numeric(gsub("\\D", "", ALT)), 59105674, 59683460) ), "RP17", note)) %>% 
         select(AnnotSV_ID:Gene_name,panel_class,ACMG_class,note,CohortFreq,`NaltP/NtotalP`,OMIM_phenotype:GnomAD_pLI,Frameshift,everything() )
@@ -341,7 +347,9 @@ if ( !file.exists(jaxcnv_file)) {
                                  panel_class == "Dx-modifier-common" ~ 0.6,
                                  SV_chrom %in% c("17", "chr17") & ( between(SV_start, 59105674, 59683460) | between(SV_end, 59105674, 59683460) ) ~ 3,
                                  TRUE ~ 0)) %>% # GRCh38 coordinates
-      arrange(desc(eyeGene), desc(ACMG_class)) %>% 
+      arrange(desc(eyeGene), desc(ACMG_class)) %>%
+      unite("temp_panel_class", panel_class, GenePhenotypeCategory, sep = "|", remove = TRUE, na.rm = TRUE) %>%
+      rename(panel_class = temp_panel_class) %>% 
       mutate(note = ifelse(SV_chrom %in% c("17", "chr17") & ( between(SV_start, 59105674, 59683460) | between(SV_end, 59105674, 59683460) ), "RP17", note)) %>% 
       select(AnnotSV_ID:Gene_name,panel_class,ACMG_class,note,CohortFreq,`NaltP/NtotalP`,OGLsamples,OMIM_phenotype:GnomAD_pLI,Frameshift,everything() )
   }
@@ -399,6 +407,8 @@ if (scramble_del_file == "filePlaceholder") {
                                panel_class == "Dx-modifier-common" ~ 2,
                                TRUE ~ 0)) %>% 
     arrange(desc(eyeGene), desc(ACMG_class)) %>% 
+    unite("temp_panel_class", panel_class, GenePhenotypeCategory, sep = "|", remove = TRUE, na.rm = TRUE) %>%
+    rename(panel_class = temp_panel_class) %>% 
     select(AnnotSV_ID:Annotation_mode,OMIM_phenotype:ACMG_class,panel_class,CohortFreq,`NaltP/NtotalP`,note,everything() ) 
   if (dim(scramble_del_sort)[1] == 0) {
     scramble_del_sort <- scramble_del_sort %>% add_row(note = "no scramble del candidate after filtering with scramble db")
