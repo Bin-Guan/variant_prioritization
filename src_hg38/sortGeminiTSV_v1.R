@@ -513,7 +513,7 @@ xD <- gemini_filtered3 %>% filter(chrom %in% c("X", "chrX"), recessive_cnt == 1,
 
 #ar are those genes with homozygous or compound hets variants of ps >= 5. However, ps = 4 variants were also listed if there are 2 ps>=5.
 #ar gene with 1 hit will not be here.
-ar <- gemini_filtered3 %>% filter(!chrom %in% c("X", "Y", "chrX", "chrY"), !omim_inheritance %in% c("AD"), priority_score >= 5, recessive_cnt >= 2) %>% 
+ar <- gemini_filtered3 %>% filter(!chrom %in% c("X", "Y", "chrX", "chrY"), priority_score >= 5, recessive_cnt >= 2) %>% 
   mutate(knownAR = ifelse(grepl("AR", omim_inheritance), 1, 0)) %>% 
   arrange(desc(eyeGene), desc(knownAR), desc(maxpriorityscore), ref_gene, desc(priority_score)) %>% 
   mutate(note = ifelse(ref_gene %in% c("PRPH2", "ROM1", "PCDH15", "CDH23", "CNGA1", "CNGB1", "CNGA3", "CNGB3"), 
