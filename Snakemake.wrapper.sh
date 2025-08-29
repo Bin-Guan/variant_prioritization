@@ -45,7 +45,7 @@ sed -i 's/\r$//' $(grep "^ped:" $1 | head -n 1 | cut -d"'" -f 2)
 #fi
 
 WORK_DIR=$PWD
-check=$(echo $@ | grep "dryrun\|dry-run\|unlock" | wc -l)
+check=$(echo $@ | grep "dryrun\|dry-run\|unlock\|touch" | wc -l)
 if (( $check > 0 )); then
 	echo "Argument contains unlock or dry-run"
 else

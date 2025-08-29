@@ -1259,18 +1259,20 @@ if config['datatype'].upper() in ["WGS", "GENOME", "EXOME", "WES"]:
 		input:
 			db = '{sample}.PED_{ped}.gemini.db'
 		output:
-			tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.tsv',
-			ref_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.ref.tsv'
+			tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.tsv.gz',
+			ref_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.ref.tsv.gz'
 		shell:
 			"""
 			module load {config[gemini_version]}
 			cp {input.db} /lscratch/$SLURM_JOB_ID/.
  			time gemini query -q \
-			"SELECT *, gt_types.{wildcards.sampleid}, gts.{wildcards.sampleid}, gt_phases.{wildcards.sampleid}, gt_depths.{wildcards.sampleid}, gt_alt_freqs.{wildcards.sampleid}, gt_quals.{wildcards.sampleid} FROM variants WHERE priority_score > -2" \
-			--header --gt-filter "gt_types.{wildcards.sampleid}  == HET OR gt_types.{wildcards.sampleid}  == HOM_ALT" /lscratch/$SLURM_JOB_ID/{input.db} > {output.tsv}
+			 "SELECT *, gt_types.{wildcards.sampleid}, gts.{wildcards.sampleid}, gt_phases.{wildcards.sampleid}, gt_depths.{wildcards.sampleid}, gt_alt_freqs.{wildcards.sampleid}, gt_quals.{wildcards.sampleid} FROM variants WHERE priority_score > -2" \
+			 --header --gt-filter "gt_types.{wildcards.sampleid}  == HET OR gt_types.{wildcards.sampleid}  == HOM_ALT" /lscratch/$SLURM_JOB_ID/{input.db} \
+			 | gzip > {output.tsv}
 			time gemini query -q \
-			"SELECT *, gt_types.{wildcards.sampleid}, gts.{wildcards.sampleid}, gt_phases.{wildcards.sampleid}, gt_depths.{wildcards.sampleid}, gt_alt_freqs.{wildcards.sampleid}, gt_quals.{wildcards.sampleid} FROM variants WHERE pmaxaf > 0.99 AND gno3_af_all > 0.98" \
-			--header --gt-filter "(gt_types.{wildcards.sampleid}  == HET OR gt_types.{wildcards.sampleid}  == HOM_REF) AND gt_quals.{wildcards.sampleid} > 10 AND gt_depths.{wildcards.sampleid} > 5" /lscratch/$SLURM_JOB_ID/{input.db} > {output.ref_tsv}
+			 "SELECT *, gt_types.{wildcards.sampleid}, gts.{wildcards.sampleid}, gt_phases.{wildcards.sampleid}, gt_depths.{wildcards.sampleid}, gt_alt_freqs.{wildcards.sampleid}, gt_quals.{wildcards.sampleid} FROM variants WHERE pmaxaf > 0.99 AND gno3_af_all > 0.98" \
+			 --header --gt-filter "(gt_types.{wildcards.sampleid}  == HET OR gt_types.{wildcards.sampleid}  == HOM_REF) AND gt_quals.{wildcards.sampleid} > 10 AND gt_depths.{wildcards.sampleid} > 5" /lscratch/$SLURM_JOB_ID/{input.db} \
+			 | gzip > {output.ref_tsv}
 			"""
 else:
 	localrules: query_gemini_individual
@@ -1278,18 +1280,20 @@ else:
 		input:
 			db = '{sample}.PED_{ped}.gemini.db'
 		output:
-			tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.tsv',
-			ref_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.ref.tsv'
+			tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.tsv.gz',
+			ref_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.ref.tsv.gz'
 		resources: res=1
 		shell:
 			"""
 			if [[ $(module list 2>&1 | grep "gemini" | wc -l) < 1 ]]; then module load {config[gemini_version]}; fi
  			time gemini query -q \
-			"SELECT *, gt_types.{wildcards.sampleid}, gts.{wildcards.sampleid}, gt_phases.{wildcards.sampleid}, gt_depths.{wildcards.sampleid}, gt_alt_freqs.{wildcards.sampleid}, gt_quals.{wildcards.sampleid} FROM variants" \
-			--header --gt-filter "gt_types.{wildcards.sampleid}  == HET OR gt_types.{wildcards.sampleid}  == HOM_ALT" {input.db} > {output.tsv}
+			 "SELECT *, gt_types.{wildcards.sampleid}, gts.{wildcards.sampleid}, gt_phases.{wildcards.sampleid}, gt_depths.{wildcards.sampleid}, gt_alt_freqs.{wildcards.sampleid}, gt_quals.{wildcards.sampleid} FROM variants" \
+			 --header --gt-filter "gt_types.{wildcards.sampleid}  == HET OR gt_types.{wildcards.sampleid}  == HOM_ALT" {input.db} \
+			 | gzip > {output.tsv}
 			time gemini query -q \
-			"SELECT *, gt_types.{wildcards.sampleid}, gts.{wildcards.sampleid}, gt_phases.{wildcards.sampleid}, gt_depths.{wildcards.sampleid}, gt_alt_freqs.{wildcards.sampleid}, gt_quals.{wildcards.sampleid} FROM variants WHERE pmaxaf > 0.99 AND gno3_af_all > 0.98" \
-			--header --gt-filter "(gt_types.{wildcards.sampleid}  == HET OR gt_types.{wildcards.sampleid}  == HOM_REF) AND gt_quals.{wildcards.sampleid} > 10 AND gt_depths.{wildcards.sampleid} > 5" {input.db} > {output.ref_tsv}
+			 "SELECT *, gt_types.{wildcards.sampleid}, gts.{wildcards.sampleid}, gt_phases.{wildcards.sampleid}, gt_depths.{wildcards.sampleid}, gt_alt_freqs.{wildcards.sampleid}, gt_quals.{wildcards.sampleid} FROM variants WHERE pmaxaf > 0.99 AND gno3_af_all > 0.98" \
+			 --header --gt-filter "(gt_types.{wildcards.sampleid}  == HET OR gt_types.{wildcards.sampleid}  == HOM_REF) AND gt_quals.{wildcards.sampleid} > 10 AND gt_depths.{wildcards.sampleid} > 5" {input.db} \
+			 | gzip > {output.ref_tsv}
 			"""
 
 #--gt-filter "gt_types.{wildcards.sampleid}  == HET OR gt_types.{wildcards.sampleid}  == HOM_ALT" equals to but faster than
@@ -1301,11 +1305,11 @@ else:
 if config['datatype'].upper() == "PANEL":
 	rule sortGemini:
 		input:
-			tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.tsv',
-			ref_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.ref.tsv'
+			tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.tsv.gz',
+			ref_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.ref.tsv.gz'
 		output:
-			rearranged_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.rearranged.tsv',
-			filtered_tsv = 'gemini_tsv_filtered/{sampleid}.{sample}.{ped}.gemini.filtered.tsv',
+			rearranged_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.rearranged.tsv.gz',
+			filtered_tsv = 'gemini_tsv_filtered/{sampleid}.{sample}.{ped}.gemini.filtered.tsv.gz',
 			filtered_xlsx = 'gemini_xlsx/{sampleid}.{sample}.{ped}.gemini.filtered.xlsx'
 		shell:
 			"""
@@ -1327,12 +1331,13 @@ if config['datatype'].upper() == "PANEL":
 elif config['datatype'].upper() in ["EXOME", "WES"]:
 	rule sortGemini:
 		input:
-			tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.tsv',
-			ref_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.ref.tsv'
+			tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.tsv.gz',
+			ref_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.ref.tsv.gz'
 		output:
-			rearranged_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.rearranged.tsv',
-			filtered_tsv = 'gemini_tsv_filtered/{sampleid}.{sample}.{ped}.gemini.filtered.tsv',
+			rearranged_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.rearranged.tsv.gz',
+			filtered_tsv = 'gemini_tsv_filtered/{sampleid}.{sample}.{ped}.gemini.filtered.tsv.gz',
 			filtered_xlsx = 'gemini_xlsx/{sampleid}.{sample}.{ped}.gemini.filtered.xlsx'
+		threads: 4
 		shell:
 			"""
 			if [[ $(module list 2>&1 | grep "R/" | wc -l) < 1 ]]; then module load {config[R_version]}; fi
@@ -1348,12 +1353,13 @@ elif config['datatype'].upper() in ["EXOME", "WES"]:
 else:
 	rule sortGemini:
 		input:
-			tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.tsv',
-			ref_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.ref.tsv'
+			tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.tsv.gz',
+			ref_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.ref.tsv.gz'
 		output:
-			rearranged_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.rearranged.tsv',
-			filtered_tsv = 'gemini_tsv_filtered/{sampleid}.{sample}.{ped}.gemini.filtered.tsv',
+			rearranged_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.rearranged.tsv.gz',
+			filtered_tsv = 'gemini_tsv_filtered/{sampleid}.{sample}.{ped}.gemini.filtered.tsv.gz',
 			filtered_xlsx = 'gemini_xlsx/{sampleid}.{sample}.{ped}.gemini.filtered.xlsx'
+		threads: 4
 		shell:
 			"""
 			mkdir -p gemini_tsv_filtered gemini_xlsx
@@ -1372,7 +1378,7 @@ else:
 localrules: LesserAlleleFreq
 rule LesserAlleleFreq:
 	input:
-		'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.rearranged.tsv'
+		'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.rearranged.tsv.gz'
 	output:
 		LAFplot = 'LesserAlleleFreq/{sampleid}.{sample}.{ped}.LAF.jpeg'
 	shell:
