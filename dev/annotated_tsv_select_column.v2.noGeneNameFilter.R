@@ -15,7 +15,12 @@ output_tsv_file <- args[2]
 OGLanno <- read_tsv(Input_file, col_names = TRUE, na = c("NA", "", "None", "NONE", ".", "FALSE", "False"), col_types = cols(.default = col_character())) %>%
   type_convert() %>% 
   separate_rows(CSQ, sep = "\\,") %>%
-  separate(CSQ, c('allele','consequence','codons','amino_acids','gene','symbol','MANE_SELECT','feature','exon','intron','hgvsc','hgvsp','max_af','max_af_pops','protein_position','biotype','canonical','domains','existing_variation','clin_sig','pick','pubmed','phenotypes','sift','polyphen','cadd_raw','cadd_phred','genesplicer','spliceregion','MaxEntScan_alt','maxentscan_diff','MaxEntScan_ref','existing_inframe_oorfs','existing_outofframe_oorfs','existing_uorfs','five_prime_utr_variant_annotation','five_prime_utr_variant_consequence','MOTIF_NAME','MOTIF_POS','HIGH_INF_POS','MOTIF_SCORE_CHANGE','am_class','am_pathogenicity'), sep = "\\|", remove = TRUE, convert = TRUE) %>% 
+  separate(CSQ, c('allele','consequence','codons','amino_acids','gene','symbol','mane','mane_select','mane_plus_clinical',
+                  'feature','exon','intron','hgvsc','hgvsp','max_af','max_af_pops','protein_position','biotype','canonical',
+                  'domains','existing_variation','clin_sig','pick','pubmed','phenotypes','sift','polyphen','cadd_raw','cadd_phred',
+                  'genesplicer','spliceregion','maxentscan_alt','maxentscan_diff','maxentscan_ref','existing_inframe_oorfs','existing_outofframe_oorfs','existing_uorfs','five_prime_utr_variant_annotation','five_prime_utr_variant_consequence',
+                  'motif_name','motif_pos','high_inf_pos','motif_score_change','am_class','am_pathogenicity','refseq_match','bam_edit','source'),
+           sep = "\\|", remove = TRUE, convert = TRUE) %>% 
   #gno2x_af_all,gno3_af_all,maxaf_annovar,gno2x_af_popmax,gno3_popmax,gno_gx_ratio,gno2x_an_all,gno3_an_all,gno2x_filter,gno3_filter AND max_af above from VEP.
   mutate(temp_genesplicer = case_when(grepl("High", genesplicer) ~ 3,
                                       grepl("Medium", genesplicer) ~ 1,

@@ -23,7 +23,7 @@ OGLanno <- read_tsv(Input_file, col_names = TRUE, na = c("NA", "", "None", "NONE
          'refgenewithver', 'mane_select', 'hgvsc', 'hgvsp', 'exon', 'intron', 'aa_length',
          'omim_gene', 'omim_inheritance', 'omim_phen', 'pvs1', 'truncating_vep', 'hgmd_id',
          'hgmd_class', 'hgmd_phen', 'hgmd_overlap4aa', 'existing_variation', 'clnalleleid',
-         'clnsig', 'clin_sig', 'clnrevstat', 'clndn', 'clndisdb') %>% 
+         'clnsig', 'clin_sig', 'clnrevstat', 'clndn', 'clndisdb', 'gno3_ac_all', 'gno3_an_all') %>% 
  filter(gene == geneNames | ref_gene == geneNames)
 
 write_tsv(OGLanno, output_file, na = ".")

@@ -13,7 +13,7 @@
 
 args <- commandArgs(trailingOnly=TRUE)
 
-# setwd("Z:/genome/RodYoung/prioritization")
+# setwd("Z:/genome/x/prioritization")
 # args <- c("gemini_tsv/RY1.ChileMAC.chileanMAC.gemini.tsv",
 #           "gemini_tsv/RY1.ChileMAC.chileanMAC.gemini.ref.tsv",
 #           "Z:/resources/OGLpanelGeneDxORcandidate.xlsx",
@@ -94,7 +94,7 @@ rm(gemini_input)
 panelGene <- read_xlsx(geneCategory_file, sheet = "analysis", na = c("NA", "", "None", "NONE", ".")) %>%
   #mutate(ref_gene = toupper(gene)) %>%
   rename(ref_gene = gene) %>% 
-  select(ref_gene, panel_class, GenePhenotypeCategory) %>% distinct()
+  select(ref_gene, panel_class, GenePhenotypeCategory, Phenotypes) %>% distinct()
 blacklistGene <- read_xlsx(geneCategory_file, sheet = "IVA", na = c("NA", "", "None", "NONE", "."))  %>% filter(Blacklist == "Excluded") %>% pull(Gene)
 
 # get max_priority_score for each gene
@@ -129,7 +129,9 @@ gemini_rearrangeCol <- left_join(gemini_max_priority_score, panelGene, by = c("r
                              panel_class == "Dx-modifier-common" ~ 0.6,
                              TRUE ~ 0)) %>% 
   unite("temp_panel_class", panel_class, GenePhenotypeCategory, sep = "|", remove = TRUE, na.rm = TRUE) %>%
-  rename(panel_class = temp_panel_class) %>% 
+  rename(panel_class = temp_panel_class) %>%
+  unite("temp_omim_phen", omim_phen, Phenotypes, sep = "::", remove = TRUE, na.rm = TRUE) %>%
+  rename(omim_phen = temp_omim_phen) %>%
   select(-gno2x_expected_an, -gno3_expected_an) %>% 
   mutate(gt_alt_freqs = round(gt_alt_freqs,2),
          aaf = round(aaf, 3),
@@ -244,7 +246,8 @@ if (nrow(gemini_ref_var_input) == 0) {
 
 gemini_filtered <- gemini_rearrangeCol %>% mutate(temp_group = ifelse(priority_score >= 3, 3, ifelse(priority_score >= -3, -3, -4))) %>% # checked OPA1 non-coding regions, the AF for some of variants with score -3 are around 0.01.
   filter(!ref_gene %in% blacklistGene, priority_score >= 15 | (temp_group >= -3 & pmaxaf < 0.1 & aaf < aafCutoff & af_oglg < 0.05 & af_oglx < 0.05) ) %>%
-  arrange(desc(eyeGene), desc(temp_group), desc(maxpriorityscore), ref_gene, desc(priority_score)) 
+  arrange(desc(eyeGene), desc(temp_group), desc(maxpriorityscore), ref_gene, desc(priority_score)) %>% 
+  filter(priority_score >= 3)
 
 gemini_filtered0 <- gemini_filtered %>% select(-maxpriorityscore) #filtered0: temp_group >= -3 & pmaxaf < 0.2 & aaf < aafCutoff) | priority_score >= 10 
 
@@ -320,7 +323,11 @@ if ( !file.exists(jaxcnv_file)) {
 } else {
   jaxcnv_original <- read_tsv(jaxcnv_file, col_names = TRUE, na = c("NA", "full=NA", "", "None", "NONE", "."), col_types = cols(.default = col_character())) %>%
     mutate(ACMG_class = sub("full=", "", ACMG_class)) %>% 
-    type_convert() 
+    type_convert()
+  trim_cell <- function(x) {
+    if (is.character(x)) substr(x, 1L, 32767L) else x
+  }
+  jaxcnv_original[] <- lapply(jaxcnv_original, trim_cell)
   if (nrow(jaxcnv_original) == 0) {
     jaxcnv_sort <- data.frame("sample" = sampleName, "note" = "No PASS jaxcnv call") 
   } else { jaxcnv1 <- jaxcnv_original %>% mutate(temp_SV_start = round(SV_start, -3), temp_SV_end = round(SV_end, -3)) %>%
@@ -428,14 +435,14 @@ gemini_filtered <- gemini_filtered %>%
                                    ref_gene %in% c("CNGA1", "CNGB1") ~ "CNGA1-CNGB1",
                                    TRUE ~ ref_gene)) # digenic recessive
 
-gemini_filtered1 <- gemini_filtered %>% filter(priority_score >= 3) %>% 
+gemini_filtered1 <- gemini_filtered %>% filter(priority_score >= 5) %>% # changed from score of 3 to 5 on 9/11/2025 
   select(-maxpriorityscore) %>% 
   arrange(desc(eyeGene), desc(priority_score)) #this goes to "all" sheet after noting clinSV genes later.
   
-gemini_filtered2 <- gemini_filtered %>% filter(priority_score >= 4) 
+gemini_filtered2 <- gemini_filtered %>% filter(priority_score >= 5) # changed from score of 4 to 5 on 9/11/2025 
 
 recessive_count <- select(gemini_filtered2, c(temp_ref_gene, priority_score, gt_types)) %>%
-  filter(priority_score >= 5) %>% select(-priority_score) %>% 
+  filter(priority_score >= 5.5) %>% select(-priority_score) %>% 
   group_by(temp_ref_gene) %>% summarize(recessive_cnt = sum(gt_types)) 
 
 eyeGeneList <- read_xlsx(geneCategory_file, sheet = "analysis", na = c("NA", "", "None", ".")) %>% 
@@ -501,19 +508,20 @@ gemini_filtered3 <- left_join(gemini_filtered2, recessive_count, by=c("temp_ref_
 
 acmg <- gemini_filtered3 %>% filter(ref_gene %in% acmg_genes, priority_score > 4) %>%
   filter(ref_gene != "HFE" | (chr_variant_id == "chr6-26092913-G-A" & recessive_cnt > 1) ) %>% #HFE report hmz C282Y only
-  filter(recessive_cnt > 1 | !ref_gene %in% acmg_ARgenes) %>% #AR gene requires two variants
+  filter(recessive_cnt > 1 | !ref_gene %in% acmg_ARgenes | 
+           grepl("RPE65",refgenewithver) & grepl("D477G|E519K",refgenewithver)) %>% #AR gene requires two variants, RPE65 has 2 dominant variants
   filter(ref_gene != "ABCD1" | recessive_cnt > 1 ) %>% #ABCD1 (XLR) requires hemi or hmz or 2 het
   filter(ref_gene != "TTN" | pvs1 == 1 | truncating_vep == 1 ) %>%  #Truncating only for TTN
   select(-maxpriorityscore, -recessive_cnt)
  
 print("###acmg done### 70%")
 
-xR <- gemini_filtered3 %>% filter(chrom %in% c("X", "chrX"), priority_score >= 5, recessive_cnt >= 2) %>% select(-maxpriorityscore, -recessive_cnt)
+xR <- gemini_filtered3 %>% filter(chrom %in% c("X", "chrX"), priority_score >= 5.5, recessive_cnt >= 2) %>% select(-maxpriorityscore, -recessive_cnt)
 xD <- gemini_filtered3 %>% filter(chrom %in% c("X", "chrX"), recessive_cnt == 1, pmaxaf < 0.002) %>% select(-maxpriorityscore, -recessive_cnt)
 
 #ar are those genes with homozygous or compound hets variants of ps >= 5. However, ps = 4 variants were also listed if there are 2 ps>=5.
 #ar gene with 1 hit will not be here.
-ar <- gemini_filtered3 %>% filter(!chrom %in% c("X", "Y", "chrX", "chrY"), priority_score >= 5, recessive_cnt >= 2) %>% 
+ar <- gemini_filtered3 %>% filter(!chrom %in% c("X", "Y", "chrX", "chrY"), priority_score >= 5.5, recessive_cnt >= 2) %>% 
   mutate(knownAR = ifelse(grepl("AR", omim_inheritance), 1, 0)) %>% 
   arrange(desc(eyeGene), desc(knownAR), desc(maxpriorityscore), ref_gene, desc(priority_score)) %>% 
   mutate(note = ifelse(ref_gene %in% c("PRPH2", "ROM1", "PCDH15", "CDH23", "CNGA1", "CNGB1", "CNGA3", "CNGB3"), 

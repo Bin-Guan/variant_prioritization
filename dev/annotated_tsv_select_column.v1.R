@@ -15,7 +15,12 @@ print(geneNames)
 OGLanno <- read_tsv(Input_file, col_names = TRUE, na = c("NA", "", "None", "NONE", ".", "FALSE", "False"), col_types = cols(.default = col_character())) %>%
   type_convert() %>% 
   separate_rows(CSQ, sep = "\\,") %>%
-  separate(CSQ, c("Allele","Consequence","Codons","Amino_acids","Gene","SYMBOL","MANE_SELECT","Feature","EXON","INTRON","HGVSc","HGVSp","MAX_AF","MAX_AF_POPS","Protein_position","BIOTYPE","CANONICAL","DOMAINS","Existing_variation","CLIN_SIG","PICK","PUBMED","Phenotypes","SIFT","PolyPhen","CADD_RAW","CADD_PHRED","GeneSplicer","SpliceRegion","MaxEntScan_alt","MaxEntScan_diff","MaxEntScan_ref","existing_InFrame_oORFs","existing_OutOfFrame_oORFs","existing_uORFs","five_prime_UTR_variant_annotation","five_prime_UTR_variant_consequence","MOTIF_NAME","MOTIF_POS","HIGH_INF_POS","MOTIF_SCORE_CHANGE","am_class","am_pathogenicity"), sep = "\\|", remove = TRUE) %>% 
-  filter(CANONICAL == "YES", grepl(geneNames, SYMBOL))
+  separate(CSQ, c('allele','consequence','codons','amino_acids','gene','symbol','mane','mane_select','mane_plus_clinical',
+                  'feature','exon','intron','hgvsc','hgvsp','max_af','max_af_pops','protein_position','biotype','canonical',
+                  'domains','existing_variation','clin_sig','pick','pubmed','phenotypes','sift','polyphen','cadd_raw','cadd_phred',
+                  'genesplicer','spliceregion','maxentscan_alt','maxentscan_diff','maxentscan_ref','existing_inframe_oorfs','existing_outofframe_oorfs','existing_uorfs','five_prime_utr_variant_annotation','five_prime_utr_variant_consequence',
+                  'motif_name','motif_pos','high_inf_pos','motif_score_change','am_class','am_pathogenicity','refseq_match','bam_edit','source'),
+           sep = "\\|", remove = TRUE, convert = TRUE) %>% 
+  filter(canonical == "YES", grepl(geneNames, symbol))
 openxlsx::write.xlsx(list("OGLanno" = OGLanno), file = output_file, firstRow = TRUE, firstCol = TRUE)
 
