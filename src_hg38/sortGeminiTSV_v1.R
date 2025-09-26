@@ -49,8 +49,9 @@ scramble_mei_file <- args[14]
 scramble_del_file <- args[15]
 config_file <- args[16]
 clinsv_file <- args[17]
-convading_file <- args[18]
-convading_LAF <- args[19]
+mutserve_file <- args[18]
+convading_file <- args[19]
+convading_LAF <- args[20]
 
 library(tidyverse)
 library(readxl)
@@ -543,13 +544,28 @@ print("###inheritance search done### 50%")
 config <- read_tsv(config_file, col_names = FALSE, na = c("NA", ""), col_types = cols(.default = col_character())) %>% 
   separate("X1", c("tool", "version", "note"), sep = "\\:|\\#", remove = TRUE)
 
+mutserve <- read_tsv(mutserve_file, col_names = TRUE, na = c("NA", "full=NA", "", "None", "NONE", "."), col_types = cols(.default = col_character())) %>%
+  type_convert()
+if (is.na(mutserve_file) | mutserve_file == "filePlaceholder") {
+  mutserve <- data.frame("sample" = sampleName, "note" = "Mitochondria not analyzed or empty.")
+} else {
+  mutserve <- read_tsv(mutserve_file, col_names = TRUE, na = c("NA", "full=NA", "", "None", "NONE", "."), col_types = cols(.default = col_character())) %>%
+    type_convert() %>% 
+    replace_na(list(Helix_vaf_hom = -1, Helix_vaf_het = -1)) %>% 
+    mutate(VariantGroup = ifelse(Helix_vaf_hom > 0.01 | Helix_vaf_het > 0.01 | VariantLevel < 0.01, -1, 1) ) %>% 
+    mutate(VariantGroup = case_when(grepl("P]", mitomapDiseaseStatus) ~ VariantGroup + 4,
+                                    grepl("B]", mitomapDiseaseStatus) ~ VariantGroup - 4,
+                                    !is.na(mitomapDiseaseStatus) ~ VariantGroup + 1,
+                                    TRUE ~ VariantGroup)) %>% 
+    arrange(desc(VariantGroup))
+}
 summaryInfo <- data.frame("sample" = sampleName, "PatientDxPhenotype" = NA, "DxOutcome"= NA, "variant" = NA, "reviewer" = NA, "date" = NA) %>% 
   add_row("sample" = sampleName, "PatientDxPhenotype" = NA, "DxOutcome"= NA, "variant" = NA, "reviewer" = NA, "date" = NA)
 
 #scramble_del_file == "filePlaceholder", genome as scramble_del is not run for genome.
-#is.an(convading_file), exome 
+#is.na(convading_file): exome 
 if (scramble_del_file == "filePlaceholder") {
-  openxlsx::write.xlsx(list("AR" = ar, "AD" = ad, "XR" = xR, "XD" = xD, "ACMG" = acmg, "all" = gemini_filtered1, "rareRef" = gemini_ref_var_rearrangeCol, "clinSV" = clinsv, "manta" = manta_sort, "jaxCNV" = jaxcnv_sort, "scramble_mei" = scramble_mei, "roh" = roh, "config" = config, "summary" = summaryInfo), file = gemini_xlsx_file, firstRow = TRUE, firstCol = TRUE, keepNA = FALSE)
+  openxlsx::write.xlsx(list("AR" = ar, "AD" = ad, "XR" = xR, "XD" = xD, "MT" = mutserve, "ACMG" = acmg, "all" = gemini_filtered1, "rareRef" = gemini_ref_var_rearrangeCol, "clinSV" = clinsv, "manta" = manta_sort, "jaxCNV" = jaxcnv_sort, "scramble_mei" = scramble_mei, "roh" = roh, "config" = config, "summary" = summaryInfo), file = gemini_xlsx_file, firstRow = TRUE, firstCol = TRUE, keepNA = FALSE)
 } else if (is.na(convading_file)) {
   openxlsx::write.xlsx(list("AR" = ar, "AD" = ad, "XR" = xR, "XD" = xD, "ACMG" = acmg, "all" = gemini_filtered1, "rareRef" = gemini_ref_var_rearrangeCol, "manta" = manta_sort, "scramble_mei" = scramble_mei, "scramble_del" = scramble_del_sort, "roh" = roh, "config" = config, "summary" = summaryInfo), file = gemini_xlsx_file, firstRow = TRUE, firstCol = TRUE, keepNA = FALSE)
 } else {

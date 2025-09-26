@@ -1,8 +1,9 @@
-input_vcf: 'test_trio.vcf.gz' #bcf also accepted.
-annotated_vcf: 'FALSE' #TRUE/FALSE or YES/NO case insensitive, delete "vcf" and "individual_query" in output_type below
+input_vcf: 'test_trio.vcf.gz' #bcf also accepted. A vcf file is needed for deriving batch_anme, even staring with GEMINI_db
+input_geminiDB: 'gemini/example.gemini.db' #cannot be in the working directory, needs to be in the same drive due to "cp -l" linking
+input_type: 'vcf' #vcf/annotatedVcf/geminiDB, case insensitive. annotatedVcf: delete "vcf" and "individual_query" in output_type below; geminidb: delete "vcf" in output_type below
 gatk3: 'FALSE' # FALSE if using freebayes or deepvariant vcf.
 aaf_change: '1.1'
-output_type: ['vcf', 'geminiDB', 'family_query', 'individual_query'] #list, delete the component that is not needed, 'vcf' or blank for annotating a vcf file only
+output_type: ['vcf', 'peddy', 'geminiDB', 'family_query', 'individual_query'] #list, delete the component that is not needed, 'vcf' for annotating a vcf file only
 NGS_genotype_calling: 'OGL' #OGL (default, inlcuding outputs other than SNV & small indel) OR vcf (only the vcf file is present)
 family_name: [] # empty list or One or more family names in the list ['family_1', 'family_2']. If it's blank and output_type includes family_query, then it will take ped file and make a family list.
 seeGEM: 'FALSE' #TRUE or FALSE

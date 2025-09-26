@@ -75,3 +75,11 @@ Rscript ~/git/variant_prioritization/dev/geneSearch_combine_sample.R /lscratch/$
 
 #chgrp OGL "$geneName".exome.$YEARSTAMP.tsv "$geneName".exome.$YEARSTAMP.xlsx "$geneName".genome.$YEARSTAMP.tsv "$geneName".genome.$YEARSTAMP.xlsx
 chgrp OGL $YEARSTAMP."$geneName".exome.xlsx $YEARSTAMP."$geneName".genome.xlsx
+
+
+# ## if column names are identical
+# #!/bin/bash
+# geneName=$1
+# mkdir -p geneSearch
+# head -n 1 $(ls gemini_tsv_filtered/*.filtered.tsv | head -n 1) > geneSearch/"$geneName".tsv 
+# for file in gemini_tsv_filtered/*.tsv; do grep -e $'^'$geneName$'\t' -e $'\t'$geneName$'\t' $file >> geneSearch/"$geneName".tsv; done
