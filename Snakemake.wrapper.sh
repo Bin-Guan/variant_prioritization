@@ -45,6 +45,13 @@ sed -i 's/\r$//' $(grep "^ped:" $1 | head -n 1 | cut -d"'" -f 2)
 #fi
 
 WORK_DIR=$PWD
+if (( $(echo $WORK_DIR | grep "/data/OGL" | wc -l) > 0 )); then
+ if [[ $(find $WORK_DIR -type f -exec stat -c '%G' {} \; | sort -u)  == "OGL" ]]; then
+  echo "group ownership is OK"
+ else
+  chgrp --recursive OGL $WORK_DIR
+ fi
+fi
 check=$(echo $@ | grep "dryrun\|dry-run\|unlock\|touch" | wc -l)
 if (( $check > 0 )); then
 	echo "Argument contains unlock or dry-run"
@@ -64,6 +71,13 @@ snakemake -s $snakefile \
 -k --restart-times 1 --resources res=1 \
 --configfile $@
 
+if (( $(echo $WORK_DIR | grep "/data/OGL" | wc -l) > 0 )); then
+ if [[ $(find $WORK_DIR -type f -exec stat -c '%G' {} \; | sort -u)  == "OGL" ]]; then
+  echo "group ownership is OK"
+ else
+  chgrp --recursive OGL $WORK_DIR
+ fi
+fi
 #$SLURM_JOB_CPUS_PER_NODE When local-cores set at 8 for genome 99 coordinates -- host machine used 24 cpus at the vcf_split step;
 #Thus the local-cores flag did not  limit the number of local jobs.
 #does res=1 limit the number of crossmap rule?
