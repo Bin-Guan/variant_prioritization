@@ -13,24 +13,24 @@
 
 args <- commandArgs(trailingOnly=TRUE)
 
-# setwd("Z:/genome/x/prioritization")
-# args <- c("gemini_tsv/RY1.ChileMAC.chileanMAC.gemini.tsv",
-#           "gemini_tsv/RY1.ChileMAC.chileanMAC.gemini.ref.tsv",
+# setwd("Z:/exome/x/prioritization")
+# args <- c("gemini_tsv/J01x3.YH1.gt3.J01.gemini.tsv.gz",
+#           "gemini_tsv/J01x3.YH1.gt3.J01.gemini.ref.tsv.gz",
 #           "Z:/resources/OGLpanelGeneDxORcandidate.xlsx",
-#           "gemini_tsv/RY1.ChileMAC.chileanMAC.gemini.rearranged.tsv",
-#           "gemini_tsv_filtered/RY1.ChileMAC.chileanMAC.gemini.filtered.tsv",
-#           "RY1",
-#           "gemini_xlsx/RY1.ChileMAC.chileanMAC.gemini.filtered.xlsx",
+#           "gemini_tsv/J01x3.YH1.gt3.J01.gemini.rearranged.tsv.gz",
+#           "gemini_tsv_filtered/J01x3.YH1.gt3.J01.gemini.filtered.tsv.gz",
+#           "J01x3",
+#           "gemini_xlsx/J01x3.YH1.gt3.J01.gemini.filtered.xlsx",
 #           "1.1",
-#           "../manta/manta.RY1.annotated.tsv",
+#           "../manta/manta.J01x3.annotated.tsv",
 #           "Z:/resources/manta/manta.OGL.freq.2022-09.tsv",
-#           "../jax-cnv/RY1.jaxcnv.annotated.tsv",
-#           "Z:/resources/jaxCNV/jaxCNV.OGL.freq.2025-01.tsv",
-#           "../AutoMap/RY1/RY1.HomRegions.annot.tsv",
-#           "../scramble_anno/RY1.scramble.xlsx",
 #           "filePlaceholder",
-#           "config_variant_prioritization.yaml",
-#           "../clinSV/RY1.clinSV.RARE_PASS_GENE.eG.filtered.xlsx")
+#           "Z:/resources/jaxCNV/jaxCNV.OGL.freq.2025-01.tsv",
+#           "../AutoMap/J01x3/J01x3.HomRegions.annot.tsv",
+#           "../scramble_anno/J01x3.scramble.xlsx",
+#           "../scramble_anno/J01x3.scramble.del.tsv",
+#           "config_variant_prioritization_J01.yaml",
+#           "filePlaceholder")
 
 gemini_file <- args[1]
 gemini_ref_var_file <- args[2]
@@ -535,7 +535,7 @@ ad <- gemini_filtered3 %>% filter(!chrom %in% c("X", "Y", "chrX", "chrY"),
                                   pmaxaf < 0.002, priority_score >= 5) %>% 
   arrange(desc(eyeGene), desc(maxpriorityscore), ref_gene, desc(priority_score)) %>% 
   select(-maxpriorityscore, -recessive_cnt)
-print("###inheritance search done### 50%")
+print("###inheritance search done### 80%")
 #grepl("AD", omim_inheritance) | is.na(omim_inheritance)
 
 #AD: score > 4 , AR: score > 4, all: score >= 3
@@ -544,8 +544,6 @@ print("###inheritance search done### 50%")
 config <- read_tsv(config_file, col_names = FALSE, na = c("NA", ""), col_types = cols(.default = col_character())) %>% 
   separate("X1", c("tool", "version", "note"), sep = "\\:|\\#", remove = TRUE)
 
-mutserve <- read_tsv(mutserve_file, col_names = TRUE, na = c("NA", "full=NA", "", "None", "NONE", "."), col_types = cols(.default = col_character())) %>%
-  type_convert()
 if (is.na(mutserve_file) | mutserve_file == "filePlaceholder") {
   mutserve <- data.frame("sample" = sampleName, "note" = "Mitochondria not analyzed or empty.")
 } else {

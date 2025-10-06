@@ -52,11 +52,11 @@ omim <- read_csv(omim_file, col_names = TRUE, na = c("NA", "", "None", "NONE", "
  # filter(!eye_phenotype %in% c("No ocular symptoms", "Normal eyes"
  #                              ))
 
-
+##multiple MAC in the GenePhenotypeCategory for several genes, such GNB3, GRK1, why? 
 newGeneTable <- full_join(panelGene, omim, by = "gene") %>%
   unite("Inheritance", c("Inheritance", "Inheritance_omim"), sep = "|", na.rm = TRUE, remove = TRUE) %>%
   #mutate(OGL_Phenotypes = ifelse(grepl("::", Phenotypes), NA, Phenotypes)) %>% #previous version included disease names by manual editing, #only use during the 1st trial to make v1 
-  unite("temp_phenotype", c("OGL_Phenotypes", "eye_clinical_terms"), sep = "|", na.rm = TRUE, remove = FALSE) %>% #temp_phenotype includes the disease name and use for gene grouping.
+  unite("temp_phenotype", c("OGL_Phenotypes", "eye_clinical_terms"), sep = "|", na.rm = TRUE, remove = FALSE) %>% #temp_phenotype includes the disease name and use for gene grouping below.
   unite("Phenotypes", c("OGL_Phenotypes", "eye_phenotype"), sep = "::", na.rm = TRUE, remove = FALSE) %>% #OGL annotation and omim separated by "::"
   mutate(
     Inheritance = Inheritance %>%
@@ -210,6 +210,7 @@ newGeneTable <- full_join(panelGene, omim, by = "gene") %>%
                                         ifelse(is.na(GenePhenotypeCategory), "Syndrome",
                                                paste0(GenePhenotypeCategory, ",Syndrome")),
                                         GenePhenotypeCategory )) %>%
+  mutate(GenePhenotypeCategory = ifelse(gene == "ADAM9", sub("MAC,", "", GenePhenotypeCategory), GenePhenotypeCategory)) %>% 
   select(-starts_with("temp_")) %>% 
   select(Gene_Queue_by_time:Inheritance, OGL_Phenotypes,Phenotypes, everything())
 
