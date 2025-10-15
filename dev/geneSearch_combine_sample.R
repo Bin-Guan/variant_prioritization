@@ -55,7 +55,7 @@ recessive_count <- select(filtered, c(sample, temp_zygosity)) %>%
 
 filtered <- left_join(filtered, recessive_count, by = "sample") %>%
   select(sample, recessive_cnt, AlleleCount, everything()) %>% 
-  arrange(desc(recessive_cnt),desc(AlleleCount), desc(priority_score), desc(prscore_intervar), chr_variant_id)
+  arrange(desc(recessive_cnt), sample, desc(AlleleCount), desc(priority_score), desc(prscore_intervar), chr_variant_id)
 #write_tsv(OGLanno_count, output_file, na = ".")
 
 readme <- data.frame("Item" = "Fisher", "Note" = "Allele No not accurate for chrX/Y/M") %>% 
