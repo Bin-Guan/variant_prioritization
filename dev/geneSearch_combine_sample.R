@@ -50,12 +50,13 @@ OGLanno_count <- cbind(OGLanno_count, df_fisher) %>%
 
 filtered <- OGLanno_count %>% filter(priority_score >=5 , 
                                      caller %in% c("dvFb", "fbDvg","fbDv"))  
-recessive_count <- select(filtered, c(sample, temp_zygosity)) %>% 
-  group_by(sample) %>% summarize(recessive_cnt = sum(temp_zygosity)) 
+recessive_count <- select(filtered, c(sample, temp_zygosity, AlleleCount)) %>% 
+  group_by(sample) %>% summarize(recessive_cnt = sum(temp_zygosity), maxAC = max(AlleleCount)) 
 
 filtered <- left_join(filtered, recessive_count, by = "sample") %>%
   select(sample, recessive_cnt, AlleleCount, everything()) %>% 
-  arrange(desc(recessive_cnt), sample, desc(AlleleCount), desc(priority_score), desc(prscore_intervar), chr_variant_id)
+  arrange(desc(recessive_cnt), desc(maxAC), desc(AlleleCount), desc(priority_score), desc(prscore_intervar), chr_variant_id) %>% 
+  select(-maxAC)
 #write_tsv(OGLanno_count, output_file, na = ".")
 
 readme <- data.frame("Item" = "Fisher", "Note" = "Allele No not accurate for chrX/Y/M") %>% 

@@ -112,7 +112,7 @@ else:
 rule all:
 	input:
 		expand('{sample}.vcf.annotation.done', sample=SAMPLE) if 'vcf' in config['output_type'] else 'dummy.txt',
-		expand('{sample}.PED_{ped}.gemini.db', sample=SAMPLE, ped=PEDfile) if 'geminiDB' in config['output_type'] else 'dummy.txt',
+		expand('{sample}.gemini.db', sample=SAMPLE) if 'geminiDB' in config['output_type'] else 'dummy.txt',
 		expand('{sample}_PEDDY.ped_check.csv', sample=SAMPLE) if 'peddy' in config['output_type'] else 'dummy.txt',
 		'madeline/madeline.done' if 'family_query' in config['output_type'] else 'dummy.txt',
 		expand('sample_reports/{sample}.{family_name}.PED_{ped}.lenient{gemini_lenient}.SeeGEM.report.html', \
@@ -120,13 +120,12 @@ rule all:
 			ped=PEDfile, \
 			family_name=Family_Name, \
 			gemini_lenient = config['gemini_lenient']) if ('family_query' in config['output_type'] and config['seeGEM'].upper() == 'TRUE') else 'dummy.txt',
-		expand('gemini_xlsx/{family_name}.{sample}.{ped}.lenient{gemini_lenient}.xlsx', \
+		expand('gemini_xlsx/{family_name}.{sample}.lenient{gemini_lenient}.xlsx', \
 			sample=SAMPLE, \
-			ped=PEDfile, \
 			family_name=Family_Name, \
 			gemini_lenient = config['gemini_lenient']) if ('family_query' in config['output_type'] and config['seeGEM'].upper() != 'TRUE') else 'dummy.txt',
-		expand('gemini_xlsx/{sampleid}.{sample}.{ped}.gemini.filtered.xlsx', sample=SAMPLE, ped=PEDfile, sampleid=SampleID) if ('individual_query' in config['output_type']) else 'dummy.txt',
-		expand('LesserAlleleFreq/{sampleid}.{sample}.{ped}.LAF.jpeg', sample=SAMPLE, ped=PEDfile, sampleid=SampleID) if config['LAFplot'] == 'TRUE' else 'dummy.txt',
+		expand('gemini_xlsx/{sampleid}.{sample}.gemini.filtered.xlsx', sample=SAMPLE, sampleid=SampleID) if ('individual_query' in config['output_type']) else 'dummy.txt',
+		expand('LesserAlleleFreq/{sampleid}.{sample}.LAF.jpeg', sample=SAMPLE, sampleid=SampleID) if config['LAFplot'] == 'TRUE' else 'dummy.txt',
 		'dummy.txt' if config['spliceai'].upper() in ['WRAPPER', 'VCFANNO'] else expand('temp/{sample}.spliceai.new.vcf.depot.merged', sample=SAMPLE),
 		'dummy.txt' if config['pangolin'].upper() in ['WRAPPER', 'VCFANNO'] else expand('temp/{sample}.pangolin.new.vcf.depot.merged', sample=SAMPLE)
 
@@ -180,7 +179,6 @@ if config['datatype'].upper() in ["PANEL"]:
 	localrules: annovar_intervar
 	localrules: crossmap
 	localrules: pangolin_depot
-	localrules: spliceai_depot
 	localrules: spliceai_edit
 	localrules: vcfanno_annotate
 	localrules: peddy_QC
@@ -1057,12 +1055,12 @@ if config['input_type'].upper() in ["ANNOTATEDVCF"]:
 			config['input_vcf']
 			#		vcf = '{sample}.{ver}.vcf.gz',
 		output:
-			'{sample}.PED_{ped}.gemini.db'
+			'{sample}.gemini.db'
 		#	threads: 8
 		shell:
 			"""
 			module load {config[gemini_version]}
-			vcf2db.py {input} {PEDbase}{wildcards.ped}.ped {output}
+			vcf2db.py {input} {config[ped]} {output}
 			"""
 elif config['input_type'].upper() in ["GEMINIDB"]:
 	localrules: mv_gemini_db
@@ -1070,7 +1068,7 @@ elif config['input_type'].upper() in ["GEMINIDB"]:
 		input:
 			config['input_geminiDB']
 		output:
-			'{sample}.PED_{ped}.gemini.db'
+			'{sample}.gemini.db'
 		shell:
 			"""
 			cp -l {input} {output}
@@ -1098,12 +1096,12 @@ else:
 			'{sample}.vcf.annotation.done'
 			#		vcf = '{sample}.{ver}.vcf.gz',
 		output:
-			'{sample}.PED_{ped}.gemini.db'
+			'{sample}.gemini.db'
 		#	threads: 8
 		shell:
 			"""
 			module load {config[gemini_version]}
-			vcf2db.py {wildcards.sample}.{config[anno_version]}.vcf.gz {PEDbase}{wildcards.ped}.ped {output}
+			vcf2db.py {wildcards.sample}.{config[anno_version]}.vcf.gz {config[ped]} {output}
 			"""
 	# localrules: make_dvg_gemini_db
 	# rule make_dvg_gemini_db:
@@ -1132,16 +1130,16 @@ else:
 if config['datatype'].upper() in ["WGS", "GENOME"]:
 	rule query_gemini_family:
 		input:
-			db = '{sample}.PED_{ped}.gemini.db'
+			db = '{sample}.gemini.db'
 		output:
-			denovo = 'gemini_tsv/{family_name}.{sample}.{ped}.denovo.tsv',
-			ad = temp('temp/{family_name}.{sample}.{ped}.ad.tsv'),
-			ar = temp('temp/{family_name}.{sample}.{ped}.ar.tsv'),
-			comphets = 'gemini_tsv/{family_name}.{sample}.{ped}.comphets.tsv',
-			xdenovo = 'gemini_tsv/{family_name}.{sample}.{ped}.xdenovo.tsv',
-			xd = temp('temp/{family_name}.{sample}.{ped}.xd.tsv'),
-			xr = temp('temp/{family_name}.{sample}.{ped}.xr.tsv'),
-			mendel_errors = temp('temp/{family_name}.{sample}.{ped}.mendel_errors.tsv')
+			denovo = 'gemini_tsv/{family_name}.{sample}.denovo.tsv',
+			ad = temp('temp/{family_name}.{sample}.ad.tsv'),
+			ar = temp('temp/{family_name}.{sample}.ar.tsv'),
+			comphets = 'gemini_tsv/{family_name}.{sample}.comphets.tsv',
+			xdenovo = 'gemini_tsv/{family_name}.{sample}.xdenovo.tsv',
+			xd = temp('temp/{family_name}.{sample}.xd.tsv'),
+			xr = temp('temp/{family_name}.{sample}.xr.tsv'),
+			mendel_errors = temp('temp/{family_name}.{sample}.mendel_errors.tsv')
 		shell:
 			"""
 			module load {config[gemini_version]} {config[R_version]}
@@ -1175,16 +1173,16 @@ if config['datatype'].upper() in ["WGS", "GENOME"]:
 elif config['datatype'].upper() in ["EXOME", "WES"]:
 		rule query_gemini_family:
 			input:
-				db = '{sample}.PED_{ped}.gemini.db'
+				db = '{sample}.gemini.db'
 			output:
-				denovo = 'gemini_tsv/{family_name}.{sample}.{ped}.denovo.tsv',
-				ad = temp('temp/{family_name}.{sample}.{ped}.ad.tsv'),
-				ar = temp('temp/{family_name}.{sample}.{ped}.ar.tsv'),
-				comphets = 'gemini_tsv/{family_name}.{sample}.{ped}.comphets.tsv',
-				xdenovo = 'gemini_tsv/{family_name}.{sample}.{ped}.xdenovo.tsv',
-				xd = temp('temp/{family_name}.{sample}.{ped}.xd.tsv'),
-				xr = temp('temp/{family_name}.{sample}.{ped}.xr.tsv'),
-				mendel_errors = temp('temp/{family_name}.{sample}.{ped}.mendel_errors.tsv')
+				denovo = 'gemini_tsv/{family_name}.{sample}.denovo.tsv',
+				ad = temp('temp/{family_name}.{sample}.ad.tsv'),
+				ar = temp('temp/{family_name}.{sample}.ar.tsv'),
+				comphets = 'gemini_tsv/{family_name}.{sample}.comphets.tsv',
+				xdenovo = 'gemini_tsv/{family_name}.{sample}.xdenovo.tsv',
+				xd = temp('temp/{family_name}.{sample}.xd.tsv'),
+				xr = temp('temp/{family_name}.{sample}.xr.tsv'),
+				mendel_errors = temp('temp/{family_name}.{sample}.mendel_errors.tsv')
 			shell:
 				"""
 				module load {config[gemini_version]} {config[R_version]}
@@ -1219,16 +1217,16 @@ else:
 	localrules: query_gemini_family
 	rule query_gemini_family:
 		input:
-			db = '{sample}.PED_{ped}.gemini.db'
+			db = '{sample}.gemini.db'
 		output:
-			denovo = 'gemini_tsv/{family_name}.{sample}.{ped}.denovo.tsv',
-			ad = temp('temp/{family_name}.{sample}.{ped}.ad.tsv'),
-			ar = temp('temp/{family_name}.{sample}.{ped}.ar.tsv'),
-			comphets = 'gemini_tsv/{family_name}.{sample}.{ped}.comphets.tsv',
-			xdenovo = 'gemini_tsv/{family_name}.{sample}.{ped}.xdenovo.tsv',
-			xd = temp('temp/{family_name}.{sample}.{ped}.xd.tsv'),
-			xr = temp('temp/{family_name}.{sample}.{ped}.xr.tsv'),
-			mendel_errors = temp('temp/{family_name}.{sample}.{ped}.mendel_errors.tsv')
+			denovo = 'gemini_tsv/{family_name}.{sample}.denovo.tsv',
+			ad = temp('temp/{family_name}.{sample}.ad.tsv'),
+			ar = temp('temp/{family_name}.{sample}.ar.tsv'),
+			comphets = 'gemini_tsv/{family_name}.{sample}.comphets.tsv',
+			xdenovo = 'gemini_tsv/{family_name}.{sample}.xdenovo.tsv',
+			xd = temp('temp/{family_name}.{sample}.xd.tsv'),
+			xr = temp('temp/{family_name}.{sample}.xr.tsv'),
+			mendel_errors = temp('temp/{family_name}.{sample}.mendel_errors.tsv')
 		resources: res=1
 		shell:
 			"""
@@ -1263,16 +1261,16 @@ else:
 localrules: sortGeminiFamily
 rule sortGeminiFamily:
 	input:
-		denovo = 'gemini_tsv/{family_name}.{sample}.{ped}.denovo.tsv',
-		ad = 'temp/{family_name}.{sample}.{ped}.ad.tsv',
-		ar = 'temp/{family_name}.{sample}.{ped}.ar.tsv',
-		comphets = 'gemini_tsv/{family_name}.{sample}.{ped}.comphets.tsv',
-		xdenovo = 'gemini_tsv/{family_name}.{sample}.{ped}.xdenovo.tsv',
-		xd = 'temp/{family_name}.{sample}.{ped}.xd.tsv',
-		xr = 'temp/{family_name}.{sample}.{ped}.xr.tsv',
-		mendel_errors = 'temp/{family_name}.{sample}.{ped}.mendel_errors.tsv'
+		denovo = 'gemini_tsv/{family_name}.{sample}.denovo.tsv',
+		ad = 'temp/{family_name}.{sample}.ad.tsv',
+		ar = 'temp/{family_name}.{sample}.ar.tsv',
+		comphets = 'gemini_tsv/{family_name}.{sample}.comphets.tsv',
+		xdenovo = 'gemini_tsv/{family_name}.{sample}.xdenovo.tsv',
+		xd = 'temp/{family_name}.{sample}.xd.tsv',
+		xr = 'temp/{family_name}.{sample}.xr.tsv',
+		mendel_errors = 'temp/{family_name}.{sample}.mendel_errors.tsv'
 	output:
-		xlsx = 'gemini_xlsx/{family_name}.{sample}.{ped}.lenient{gemini_lenient}.xlsx'
+		xlsx = 'gemini_xlsx/{family_name}.{sample}.lenient{gemini_lenient}.xlsx'
 	shell:
 		"""
 		if [[ $(module list 2>&1 | grep "R/" | wc -l) < 1 ]]; then module load {config[R_version]}; fi
@@ -1286,10 +1284,10 @@ rule sortGeminiFamily:
 if config['datatype'].upper() in ["WGS", "GENOME", "EXOME", "WES"]:
 	rule query_gemini_individual:
 		input:
-			db = '{sample}.PED_{ped}.gemini.db'
+			db = '{sample}.gemini.db'
 		output:
-			tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.tsv.gz',
-			ref_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.ref.tsv.gz'
+			tsv = 'gemini_tsv/{sampleid}.{sample}.gemini.tsv.gz',
+			ref_tsv = 'gemini_tsv/{sampleid}.{sample}.gemini.ref.tsv.gz'
 		shell:
 			"""
 			module load {config[gemini_version]}
@@ -1307,10 +1305,10 @@ else:
 	localrules: query_gemini_individual
 	rule query_gemini_individual:
 		input:
-			db = '{sample}.PED_{ped}.gemini.db'
+			db = '{sample}.gemini.db'
 		output:
-			tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.tsv.gz',
-			ref_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.ref.tsv.gz'
+			tsv = 'gemini_tsv/{sampleid}.{sample}.gemini.tsv.gz',
+			ref_tsv = 'gemini_tsv/{sampleid}.{sample}.gemini.ref.tsv.gz'
 		resources: res=1
 		shell:
 			"""
@@ -1334,12 +1332,12 @@ else:
 if config['datatype'].upper() == "PANEL":
 	rule sortGemini:
 		input:
-			tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.tsv.gz',
-			ref_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.ref.tsv.gz'
+			tsv = 'gemini_tsv/{sampleid}.{sample}.gemini.tsv.gz',
+			ref_tsv = 'gemini_tsv/{sampleid}.{sample}.gemini.ref.tsv.gz'
 		output:
-			rearranged_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.rearranged.tsv.gz',
-			filtered_tsv = 'gemini_tsv_filtered/{sampleid}.{sample}.{ped}.gemini.filtered.tsv.gz',
-			filtered_xlsx = 'gemini_xlsx/{sampleid}.{sample}.{ped}.gemini.filtered.xlsx'
+			rearranged_tsv = 'gemini_tsv/{sampleid}.{sample}.gemini.rearranged.tsv.gz',
+			filtered_tsv = 'gemini_tsv_filtered/{sampleid}.{sample}.gemini.filtered.tsv.gz',
+			filtered_xlsx = 'gemini_xlsx/{sampleid}.{sample}.gemini.filtered.xlsx'
 		shell:
 			"""
 			if [[ $(module list 2>&1 | grep "R/" | wc -l) < 1 ]]; then module load {config[R_version]}; fi
@@ -1360,12 +1358,12 @@ if config['datatype'].upper() == "PANEL":
 elif config['datatype'].upper() in ["EXOME", "WES"]:
 	rule sortGemini:
 		input:
-			tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.tsv.gz',
-			ref_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.ref.tsv.gz'
+			tsv = 'gemini_tsv/{sampleid}.{sample}.gemini.tsv.gz',
+			ref_tsv = 'gemini_tsv/{sampleid}.{sample}.gemini.ref.tsv.gz'
 		output:
-			rearranged_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.rearranged.tsv.gz',
-			filtered_tsv = 'gemini_tsv_filtered/{sampleid}.{sample}.{ped}.gemini.filtered.tsv.gz',
-			filtered_xlsx = 'gemini_xlsx/{sampleid}.{sample}.{ped}.gemini.filtered.xlsx'
+			rearranged_tsv = 'gemini_tsv/{sampleid}.{sample}.gemini.rearranged.tsv.gz',
+			filtered_tsv = 'gemini_tsv_filtered/{sampleid}.{sample}.gemini.filtered.tsv.gz',
+			filtered_xlsx = 'gemini_xlsx/{sampleid}.{sample}.gemini.filtered.xlsx'
 		threads: 4
 		shell:
 			"""
@@ -1383,12 +1381,12 @@ elif config['datatype'].upper() in ["EXOME", "WES"]:
 else:
 	rule sortGemini:
 		input:
-			tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.tsv.gz',
-			ref_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.ref.tsv.gz'
+			tsv = 'gemini_tsv/{sampleid}.{sample}.gemini.tsv.gz',
+			ref_tsv = 'gemini_tsv/{sampleid}.{sample}.gemini.ref.tsv.gz'
 		output:
-			rearranged_tsv = 'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.rearranged.tsv.gz',
-			filtered_tsv = 'gemini_tsv_filtered/{sampleid}.{sample}.{ped}.gemini.filtered.tsv.gz',
-			filtered_xlsx = 'gemini_xlsx/{sampleid}.{sample}.{ped}.gemini.filtered.xlsx'
+			rearranged_tsv = 'gemini_tsv/{sampleid}.{sample}.gemini.rearranged.tsv.gz',
+			filtered_tsv = 'gemini_tsv_filtered/{sampleid}.{sample}.gemini.filtered.tsv.gz',
+			filtered_xlsx = 'gemini_xlsx/{sampleid}.{sample}.gemini.filtered.xlsx'
 		threads: 4
 		shell:
 			"""
@@ -1408,9 +1406,9 @@ else:
 localrules: LesserAlleleFreq
 rule LesserAlleleFreq:
 	input:
-		'gemini_tsv/{sampleid}.{sample}.{ped}.gemini.rearranged.tsv.gz'
+		'gemini_tsv/{sampleid}.{sample}.gemini.rearranged.tsv.gz'
 	output:
-		LAFplot = 'LesserAlleleFreq/{sampleid}.{sample}.{ped}.LAF.jpeg'
+		LAFplot = 'LesserAlleleFreq/{sampleid}.{sample}.LAF.jpeg'
 	shell:
 		"""
 		if [[ $(module list 2>&1 | grep "R/" | wc -l) < 1 ]]; then module load {config[R_version]}; fi
