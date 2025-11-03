@@ -545,34 +545,12 @@ rule merge_pangolin_vcf:
 		if [[ $(module list 2>&1 | grep "samtools" | wc -l) < 1 ]]; then module load {config[samtools_version]}; fi
 		bcftools concat --threads {threads} -a --rm-dups none {input.vcf} -Oz -o /lscratch/$SLURM_JOB_ID/new.pangolin.vcf.gz
 		tabix -f -p vcf /lscratch/$SLURM_JOB_ID/new.pangolin.vcf.gz
-		TIMESTAMP=$(date "+%Y%m%d-%H%M%S")
-		Depot="/data/OGL/resources/pangolin/pangolin.depot.GRCh38.vcf.gz"
-		backupDepot="/data/OGL/resources/pangolin/backup/$TIMESTAMP.pangolin.depot.GRCh38.vcf.gz"
-		newAnno="/data/OGL/resources/pangolin/temp/$TIMESTAMP.pangolin.newAnnotation.GRCh38.vcf.gz"
-		if [[ `bcftools index -n /lscratch/$SLURM_JOB_ID/new.pangolin.vcf.gz` -gt 0 ]]; then
-			cp /lscratch/$SLURM_JOB_ID/new.pangolin.vcf.gz $newAnno
-			cp /lscratch/$SLURM_JOB_ID/new.pangolin.vcf.gz.tbi $newAnno.tbi
-			cp $Depot $backupDepot
-			cp $Depot.tbi $backupDepot.tbi
-			bcftools concat --threads {threads} -a --rm-dups none --no-version \
-				$Depot /lscratch/$SLURM_JOB_ID/new.pangolin.vcf.gz \
-				-Oz -o /lscratch/$SLURM_JOB_ID/pangolin.depot.GRCh38.vcf.gz
-			tabix -f -p vcf /lscratch/$SLURM_JOB_ID/pangolin.depot.GRCh38.vcf.gz
-			cp /lscratch/$SLURM_JOB_ID/pangolin.depot.GRCh38.vcf.gz* /data/OGL/resources/pangolin/
-			for f in $Depot $Depot.tbi; do g=$(stat -c %G -- "$f" 2>/dev/null || stat -f %Sg -- "$f" 2>/dev/null || echo ""); [ "$g" = "OGL" ] || chgrp OGL -- "$f"; done
-			if [[ `bcftools index -n $Depot` -gt `bcftools index -n $backupDepot` ]]; then
-				echo "####variant no. in original depot file: `bcftools index -n $backupDepot` ####"
-				echo "####variant no. in new depot file: `bcftools index -n $Depot`            ####"
-				rm $backupDepot $backupDepot.tbi $newAnno $newAnno.tbi
-				touch {output}
-			else
-				chgrp OGL $newAnno*
-				chgrp OGL $backupDepot*
-				echo "## new pangolin depot file is not greater than backup, check what caused the problem by checking newAnno file etc, or rerun bcftools concat."
-			fi
-		else
-			echo "## Pangolin did not annoate any variant, check whether Pangolin is needed. Shall you use vcfanno instead?"
-		fi
+		( bcftools concat --threads {threads} -a --rm-dups none --no-version \
+			/data/OGL/resources/pangolin/pangolin.depot.GRCh38.vcf.gz /lscratch/$SLURM_JOB_ID/new.pangolin.vcf.gz \
+			-Oz -o /lscratch/$SLURM_JOB_ID/pangolin.depot.GRCh38.vcf.gz ) || exit 1
+		tabix -f -p vcf /lscratch/$SLURM_JOB_ID/pangolin.depot.GRCh38.vcf.gz || exit 1
+		cp /lscratch/$SLURM_JOB_ID/pangolin.depot.GRCh38.vcf.gz* /data/OGL/resources/pangolin
+		touch {output}
 		"""
 
 # rule squirls_pangolin:
@@ -1037,8 +1015,7 @@ rule merge_spliceai_vcf:
 				$Depot /lscratch/$SLURM_JOB_ID/new.spliceai.vcf.gz \
 				-Oz -o /lscratch/$SLURM_JOB_ID/spliceai500.depot.GRCh38.vcf.gz
 			tabix -f -p vcf /lscratch/$SLURM_JOB_ID/spliceai500.depot.GRCh38.vcf.gz
-			cp /lscratch/$SLURM_JOB_ID/spliceai500.depot.GRCh38.vcf.gz* /data/OGL/resources/spliceai/
-			for f in $Depot $Depot.tbi; do g=$(stat -c %G -- "$f" 2>/dev/null || stat -f %Sg -- "$f" 2>/dev/null || echo ""); [ "$g" = "OGL" ] || chgrp OGL -- "$f"; done
+			cp /lscratch/$SLURM_JOB_ID/spliceai500.depot.GRCh38.vcf.gz* /data/OGL/resources/spliceai
 			if [[ `bcftools index -n $Depot` -gt `bcftools index -n $backupDepot` ]]; then
 				echo "####variant no. in original depot file: `bcftools index -n $backupDepot` ####"
 				echo "####variant no. in new depot file: `bcftools index -n $Depot`            ####"
