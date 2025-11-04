@@ -55,7 +55,7 @@ recessive_count <- select(filtered, c(sample, temp_zygosity, AlleleCount)) %>%
 
 filtered <- left_join(filtered, recessive_count, by = "sample") %>%
   select(sample, recessive_cnt, AlleleCount, everything()) %>% 
-  arrange(desc(recessive_cnt), desc(maxAC), desc(AlleleCount), desc(priority_score), desc(prscore_intervar), chr_variant_id) %>% 
+  arrange(desc(recessive_cnt),desc(maxAC), sample, desc(AlleleCount), desc(priority_score), desc(prscore_intervar), chr_variant_id) %>% 
   select(-maxAC)
 #write_tsv(OGLanno_count, output_file, na = ".")
 
