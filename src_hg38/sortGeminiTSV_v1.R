@@ -65,7 +65,8 @@ print("###gemini tsv loaded### 10%")
 gemini <-  gemini_input %>% mutate( start_vcf = start + 1 ) %>% 
   unite("chr_variant_id", chrom, start_vcf, ref, alt, sep = "-", remove = FALSE ) %>% 
   mutate(sample = sampleName) %>%
-  mutate(ref_gene = ifelse(is.na(ref_gene), gene, ref_gene)) 
+  mutate(ref_gene = ifelse(is.na(ref_gene), gene, ref_gene)) %>% 
+  replace_na(list(max_af = -1))
 rm(gemini_input)
 
 #mutate(temp_genes_bed = pmap_chr(list(eyeintegration_gene, gene_gnomad, omim_gene, gene, gene_refgenewithver), ~toString(unique(na.omit(c(...)))) )) %>%
@@ -113,6 +114,7 @@ gemini_rearrangeCol <- left_join(gemini_max_priority_score, panelGene, by = c("r
          gno2e3g_ac = ifelse(is.na(gno2x_ac_all) & is.na(gno3_ac_all), NA, ifelse(is.na(gno2x_ac_all), 0, gno2x_ac_all) + ifelse(is.na(gno3_ac_all), 0, gno3_ac_all) ), 
          gno2e3g_an = ifelse(is.na(gno2x_an_all) & is.na(gno3_an_all), NA, ifelse(is.na(gno2x_an_all), 0, gno2x_an_all) + ifelse(is.na(gno3_an_all), 0, gno3_an_all) )) %>% 
   mutate(gno2e3g_af = gno2e3g_ac/gno2e3g_an) %>% 
+  replace_na(list(gno2e3g_af = -1 )) %>% 
   unite("gno2e3g_acan", gno2e3g_ac, gno2e3g_an, sep = "/", remove = TRUE) %>% 
   mutate(gno2x_expected_an = case_when(chrom %in% c("X", "chrX") & gno2x_nonpar == "1" ~ 183653,
                                        chrom %in% c("Y", "chrY") & gno2x_nonpar == "1" ~ 67843,
@@ -477,7 +479,8 @@ if ( clinsv_file == "filePlaceholder") {
     filter(is.na(VariantID) | VariantID != "ID") #temporary fix for extra column name line, to be updated/edited
   clinsv$ACMG2nd <- sapply(1:nrow(clinsv), function(x) {selectGene(clinsv[x, "Genes"], acmg_genes)})
   clinsv$eyeGene <- sapply(1:nrow(clinsv), function(x) {selectGene(clinsv[x, "Genes"], eyeGeneList)})
-  clinsv <- select(clinsv, Sample:SEGD, eyeGene, ACMG2nd, everything()) %>% 
+  clinsv <- select(clinsv, Sample:SEGD, eyeGene, ACMG2nd, everything()) %>%
+    filter(PopAF_MGRB < 0.05, PopAF1k < 0.05) %>% 
     arrange(eyeGene, ACMG2nd)
   clinsv_cds <- filter(clinsv, SVtype == "BND" | GeneFeature != "intron") %>% 
     select(Genes, GT) %>% separate_rows(Genes, sep=",") %>% unique() %>% 

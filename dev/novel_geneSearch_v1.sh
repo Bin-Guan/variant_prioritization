@@ -12,7 +12,7 @@
 
 set -e
 
-geneName=$1
+geneName="novelGene"
 TIMESTAMP=$(date "+%Y%m%d-%H%M%S")
 YEARSTAMP=$(date "+%Y%m%d")
 
@@ -45,7 +45,7 @@ find /data/OGL/resources/GeneSearch/exome/gemini_tsv_filtered/ -type f -name "*.
  | parallel -j $SLURM_CPUS_PER_TASK -k '
  filename=$(basename {});
  sample=${filename%%.*};
- Rscript ~/git/variant_prioritization/dev/geneSearch_exome.R {} $geneName $sample /lscratch/$SLURM_JOB_ID/temp-$TIMESTAMP/$sample.tsv
+ Rscript ~/git/variant_prioritization/dev/novel_geneSearch_exome.R {} $geneName $sample /lscratch/$SLURM_JOB_ID/temp-$TIMESTAMP/$sample.tsv
  '
 
 # for file in /data/OGL/resources/GeneSearch/exome/gemini_tsv_filtered/*.tsv; do
@@ -69,7 +69,7 @@ find /data/OGL/resources/GeneSearch/genome/gemini_tsv_filtered/ -name "*.tsv*" \
  | parallel -j $SLURM_CPUS_PER_TASK -k '
  filename=$(basename {});
  sample=${filename%%.*};
- Rscript ~/git/variant_prioritization/dev/geneSearch.R {} $geneName /lscratch/$SLURM_JOB_ID/temp-$TIMESTAMP/$sample.tsv'
+ Rscript ~/git/variant_prioritization/dev/novel_geneSearch.R {} $geneName /lscratch/$SLURM_JOB_ID/temp-$TIMESTAMP/$sample.tsv'
 
 # for file in /data/OGL/resources/GeneSearch/genome/gemini_tsv_filtered/*.tsv; do
 # 	Rscript ~/git/variant_prioritization/dev/geneSearch.R $file $geneName /lscratch/$SLURM_JOB_ID/temp-$TIMESTAMP/$(basename $file);
@@ -84,7 +84,7 @@ then
 else
  Rscript ~/git/variant_prioritization/dev/geneSearch_combine_sample.R /lscratch/$SLURM_JOB_ID/"$geneName".genome.tsv $probandNo $YEARSTAMP."$geneName".genome.xlsx
 fi
-rm /lscratch/$SLURM_JOB_ID/temp-$TIMESTAMP/*
+#rm /lscratch/$SLURM_JOB_ID/temp-$TIMESTAMP/*
 chgrp OGL $YEARSTAMP."$geneName".exome.xlsx $YEARSTAMP."$geneName".genome.xlsx
 
 # ## if column names are identical
