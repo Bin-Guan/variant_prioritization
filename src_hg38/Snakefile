@@ -126,8 +126,8 @@ rule all:
 			gemini_lenient = config['gemini_lenient']) if ('family_query' in config['output_type'] and config['seeGEM'].upper() != 'TRUE') else 'dummy.txt',
 		expand('gemini_xlsx/{sampleid}.{sample}.gemini.filtered.xlsx', sample=SAMPLE, sampleid=SampleID) if ('individual_query' in config['output_type']) else 'dummy.txt',
 		expand('LesserAlleleFreq/{sampleid}.{sample}.LAF.jpeg', sample=SAMPLE, sampleid=SampleID) if config['LAFplot'] == 'TRUE' else 'dummy.txt',
-		'dummy.txt' if config['spliceai'].upper() in ['WRAPPER', 'VCFANNO'] else expand('temp/{sample}.spliceai.new.vcf.depot.merged', sample=SAMPLE),
-		'dummy.txt' if config['pangolin'].upper() in ['WRAPPER', 'VCFANNO'] else expand('temp/{sample}.pangolin.new.vcf.depot.merged', sample=SAMPLE)
+		expand('temp/{sample}.spliceai.new.vcf.depot.merged', sample=SAMPLE) if config['spliceai'].upper() == 'SPLICEAI' and 'vcf' in config['output_type'] else 'dummy.txt',
+		expand('temp/{sample}.pangolin.new.vcf.depot.merged', sample=SAMPLE) if config['pangolin'].upper() == 'PANGOLIN' and 'vcf' in config['output_type'] else 'dummy.txt'
 
 
 localrules: dummy
@@ -1005,9 +1005,9 @@ rule merge_sample_vcf:
 		export REF_CACHE=/lscratch/$SLURM_JOB_ID/
 		if [[ $(module list 2>&1 | grep "samtools" | wc -l) < 1 ]]; then module load {config[samtools_version]}; fi
 		bcftools concat --threads {threads} -a --rm-dups none {input.vcf} -Oz -o {wildcards.sample}.{config[anno_version]}.vcf.gz
-		tabix -f -p vcf {wildcards.sample}.{config[anno_version]}.vcf.gz
-		bcftools view --threads {threads} -i 'ID~"vg"' {wildcards.sample}.{config[anno_version]}.vcf.gz -Oz -o {wildcards.sample}.{config[anno_version]}.dvg.vcf.gz
-		tabix -@ {threads} -f -p vcf {wildcards.sample}.{config[anno_version]}.dvg.vcf.gz
+		tabix --threads {threads} -f -p vcf {wildcards.sample}.{config[anno_version]}.vcf.gz
+		#bcftools view --threads {threads} -i 'ID~"vg"' {wildcards.sample}.{config[anno_version]}.vcf.gz -Oz -o {wildcards.sample}.{config[anno_version]}.dvg.vcf.gz
+		#tabix -@ {threads} -f -p vcf {wildcards.sample}.{config[anno_version]}.dvg.vcf.gz
 		touch {output}
 		"""
 rule merge_spliceai_vcf:
@@ -1109,7 +1109,7 @@ else:
 		shell:
 			"""
 			module load {config[peddy_version]}
-			peddy -p {threads} {wildcards.sample}.{config[anno_version]}.dvg.vcf.gz {config[ped]} --prefix {wildcards.sample}_PEDDY --sites hg38
+			peddy -p {threads} {wildcards.sample}.{config[anno_version]}.vcf.gz {config[ped]} --prefix {wildcards.sample}_PEDDY --sites hg38
 			"""
 	#v0.4.6 worked with genome but failed with bp exome; v0.3.1 worked with GRCh37 vcf files without hg38 support.
 	# create gemini database. 19gb wgs genome --> 104gb in 24 hours.

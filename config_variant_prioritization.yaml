@@ -9,6 +9,7 @@ regions: '/home/$USER/git/variant_prioritization/src_hg38/vcf_region_split_chr_c
 #regions, 25 or 100 for WGS of 50 cases. Use chr, 24, 99, 499 for genome.
 output_type: ['vcf', 'peddy', 'geminiDB', 'family_query', 'individual_query'] #list, delete the component that is not needed, 'vcf' for annotating a vcf file only
 spliceai: 'spliceai' # choose from 'spliceai', 'vcfanno', or 'wrapper'; choose vcfanno if variants already added to the spliceai depot file.
+pangolin: 'pangolin' # choose from 'pangolin' 'vcfanno'; choose vcfanno if variants already added to the pangolin depot file. Pangolin error to be fixed
 NGS_genotype_calling: 'OGL' #OGL (default, inlcuding outputs other than SNV & small indel) OR vcf (only the vcf file is present)
 family_name: [] # empty list or One or more family names in the list ['family_1', 'family_2']. If it's blank and output_type includes family_query, then it will take ped file and make a family list.
 gatk3: 'FALSE' # FALSE if using freebayes or deepvariant vcf.
@@ -16,7 +17,6 @@ aaf_change: '1.1'
 seeGEM: 'FALSE' #TRUE or FALSE
 anno_version: 'anno3' #prioritization major version no. to be added in the annotated vcf file
 genomeBuild: 'GRCh38' # GRCh37 or GRCh38, case sensitive
-pangolin: 'vcfanno' # choose from 'pangolin' 'vcfanno'; choose vcfanno if variants already added to the pangolin depot file. Pangolin error to be fixed
 spliceai_version: 'spliceai/1.3.1' #version 1.3.1 seems to be mucher slower.Try to make spliceai_wrapper work if possible
 spliceai-wrapper_version: 'spliceai-wrapper/0.1.0'
 gemini_lenient: 'Yes'
