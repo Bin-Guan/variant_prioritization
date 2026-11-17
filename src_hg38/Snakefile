@@ -1370,14 +1370,14 @@ if config['datatype'].upper() == "PANEL":
 			then
 				if [[ -e ../CoNVaDING/CNV_hiSens/{wildcards.sampleid}.markDup.aligned.only.best.score.shortlist.txt ]]; then
 				Rscript /home/$USER/git/variant_prioritization/src_hg38/sortGeminiTSV_v1.R \
-					{input.tsv} {input.ref_tsv} {config[OGL_Dx_research_genes]} {output.rearranged_tsv} {output.filtered_tsv} {wildcards.sampleid} {output.filtered_xlsx} {config[aaf_change]} ../manta/manta.{wildcards.sampleid}.annotated.tsv {config[manta_freq]} filePlaceholder {config[jaxcnv_freq]} filePlaceholder ../scramble_anno/{wildcards.sampleid}.scramble.xlsx ../scramble_anno/{wildcards.sampleid}.scramble.del.tsv {config[configuration_file]} filePlaceholder filePlaceholder ../CoNVaDING/CNV_hiSens/{wildcards.sampleid}.markDup.aligned.only.best.score.shortlist.txt gemini_xlsx/{wildcards.sampleid}.geneLAF.pdf
+					{input.tsv} {input.ref_tsv} {config[OGL_Dx_research_genes]} {output.rearranged_tsv} {output.filtered_tsv} {wildcards.sampleid} {output.filtered_xlsx} {config[aaf_change]} ../manta/manta.{wildcards.sampleid}.annotated.tsv {config[manta_freq]} filePlaceholder {config[jaxcnv_freq]} filePlaceholder ../scramble_anno/{wildcards.sampleid}.scramble.xlsx ../scramble_anno/{wildcards.sampleid}.scramble.del.tsv {config[configuration_file]} filePlaceholder filePlaceholder /data/OGL/resources/gnomad/release-2.1.1/gnomad.v2.1.1.lof_metrics.by_gene.txt ../CoNVaDING/CNV_hiSens/{wildcards.sampleid}.markDup.aligned.only.best.score.shortlist.txt gemini_xlsx/{wildcards.sampleid}.geneLAF.pdf
 				else
 				Rscript /home/$USER/git/variant_prioritization/src_hg38/sortGeminiTSV_v1.R \
-					{input.tsv} {input.ref_tsv} {config[OGL_Dx_research_genes]} {output.rearranged_tsv} {output.filtered_tsv} {wildcards.sampleid} {output.filtered_xlsx} {config[aaf_change]} ../manta/manta.{wildcards.sampleid}.annotated.tsv {config[manta_freq]} filePlaceholder {config[jaxcnv_freq]} filePlaceholder ../scramble_anno/{wildcards.sampleid}.scramble.xlsx ../scramble_anno/{wildcards.sampleid}.scramble.del.tsv {config[configuration_file]} filePlaceholder filePlaceholder../CoNVaDING/CNV_hiSens/{wildcards.sampleid}.markDup.best.score.shortlist.txt gemini_xlsx/{wildcards.sampleid}.geneLAF.pdf
+					{input.tsv} {input.ref_tsv} {config[OGL_Dx_research_genes]} {output.rearranged_tsv} {output.filtered_tsv} {wildcards.sampleid} {output.filtered_xlsx} {config[aaf_change]} ../manta/manta.{wildcards.sampleid}.annotated.tsv {config[manta_freq]} filePlaceholder {config[jaxcnv_freq]} filePlaceholder ../scramble_anno/{wildcards.sampleid}.scramble.xlsx ../scramble_anno/{wildcards.sampleid}.scramble.del.tsv {config[configuration_file]} filePlaceholder filePlaceholder /data/OGL/resources/gnomad/release-2.1.1/gnomad.v2.1.1.lof_metrics.by_gene.txt ../CoNVaDING/CNV_hiSens/{wildcards.sampleid}.markDup.best.score.shortlist.txt gemini_xlsx/{wildcards.sampleid}.geneLAF.pdf
 				fi
 			else
 				Rscript /home/$USER/git/variant_prioritization/src_hg38/sortGeminiTSV_v1.R \
-					{input.tsv} {input.ref_tsv} {config[OGL_Dx_research_genes]} {output.rearranged_tsv} {output.filtered_tsv} {wildcards.sampleid} {output.filtered_xlsx} {config[aaf_change]} filePlaceholder {config[manta_freq]} filePlaceholder {config[jaxcnv_freq]} filePlaceholder filePlaceholder filePlaceholder {config[configuration_file]} filePlaceholder filePlaceholder filePlaceholder filePlaceholder
+					{input.tsv} {input.ref_tsv} {config[OGL_Dx_research_genes]} {output.rearranged_tsv} {output.filtered_tsv} {wildcards.sampleid} {output.filtered_xlsx} {config[aaf_change]} filePlaceholder {config[manta_freq]} filePlaceholder {config[jaxcnv_freq]} filePlaceholder filePlaceholder filePlaceholder {config[configuration_file]} filePlaceholder filePlaceholder /data/OGL/resources/gnomad/release-2.1.1/gnomad.v2.1.1.lof_metrics.by_gene.txt
 			fi
 			"""
 elif config['datatype'].upper() in ["EXOME", "WES"]:
@@ -1399,7 +1399,7 @@ elif config['datatype'].upper() in ["EXOME", "WES"]:
 					{input.tsv} {input.ref_tsv} {config[OGL_Dx_research_genes]} {output.rearranged_tsv} {output.filtered_tsv} {wildcards.sampleid} {output.filtered_xlsx} {config[aaf_change]} ../manta/manta.{wildcards.sampleid}.annotated.tsv {config[manta_freq]} filePlaceholder {config[jaxcnv_freq]} ../AutoMap/{wildcards.sampleid}/{wildcards.sampleid}.HomRegions.annot.tsv ../scramble_anno/{wildcards.sampleid}.scramble.xlsx ../scramble_anno/{wildcards.sampleid}.scramble.del.tsv \ {config[configuration_file]} filePlaceholder ../mito/mitomap/{wildcards.sampleid}.AnnotatedVariants.txt /data/OGL/resources/gnomad/release-2.1.1/gnomad.v2.1.1.lof_metrics.by_gene.txt
 			else
 				Rscript /home/$USER/git/variant_prioritization/src_hg38/sortGeminiTSV_v1.R \
-					{input.tsv} {input.ref_tsv} {config[OGL_Dx_research_genes]} {output.rearranged_tsv} {output.filtered_tsv} {wildcards.sampleid} {output.filtered_xlsx} {config[aaf_change]} filePlaceholder {config[manta_freq]} filePlaceholder {config[jaxcnv_freq]} filePlaceholder filePlaceholder filePlaceholder {config[configuration_file]} filePlaceholder
+					{input.tsv} {input.ref_tsv} {config[OGL_Dx_research_genes]} {output.rearranged_tsv} {output.filtered_tsv} {wildcards.sampleid} {output.filtered_xlsx} {config[aaf_change]} filePlaceholder {config[manta_freq]} filePlaceholder {config[jaxcnv_freq]} filePlaceholder filePlaceholder filePlaceholder {config[configuration_file]} filePlaceholder filePlaceholder /data/OGL/resources/gnomad/release-2.1.1/gnomad.v2.1.1.lof_metrics.by_gene.txt
 			fi
 			#do not add more "filePlaceholder" at the Rscript command, as is.na(convading_file) is used for exome option in sortGeminiTSV_v1.R
 			"""
@@ -1413,6 +1413,7 @@ else:
 			filtered_tsv = 'gemini_tsv_filtered/{sampleid}.{sample}.gemini.filtered.tsv.gz',
 			filtered_xlsx = 'gemini_xlsx/{sampleid}.{sample}.gemini.filtered.xlsx'
 		threads: 4
+		resources: res=1
 		shell:
 			"""
 			mkdir -p gemini_tsv_filtered gemini_xlsx
@@ -1423,7 +1424,7 @@ else:
 					{input.tsv} {input.ref_tsv} {config[OGL_Dx_research_genes]} {output.rearranged_tsv} {output.filtered_tsv} {wildcards.sampleid} {output.filtered_xlsx} {config[aaf_change]} ../manta/manta.{wildcards.sampleid}.annotated.tsv {config[manta_freq]} ../jax-cnv/{wildcards.sampleid}.jaxcnv.annotated.tsv {config[jaxcnv_freq]} ../AutoMap/{wildcards.sampleid}/{wildcards.sampleid}.HomRegions.annot.tsv ../scramble_anno/{wildcards.sampleid}.scramble.xlsx filePlaceholder {config[configuration_file]} ../clinSV/{wildcards.sampleid}/{wildcards.sampleid}.clinSV.RARE_PASS_GENE.eG.filtered.xlsx ../mito/mitomap/{wildcards.sampleid}.AnnotatedVariants.txt /data/OGL/resources/gnomad/release-2.1.1/gnomad.v2.1.1.lof_metrics.by_gene.txt
 			else
 				Rscript /home/$USER/git/variant_prioritization/src_hg38/sortGeminiTSV_v1.R \
-					{input.tsv} {input.ref_tsv} {config[OGL_Dx_research_genes]} {output.rearranged_tsv} {output.filtered_tsv} {wildcards.sampleid} {output.filtered_xlsx} {config[aaf_change]} filePlaceholder {config[manta_freq]} filePlaceholder {config[jaxcnv_freq]} filePlaceholder filePlaceholder filePlaceholder {config[configuration_file]} filePlaceholder filePlaceholder
+					{input.tsv} {input.ref_tsv} {config[OGL_Dx_research_genes]} {output.rearranged_tsv} {output.filtered_tsv} {wildcards.sampleid} {output.filtered_xlsx} {config[aaf_change]} filePlaceholder {config[manta_freq]} filePlaceholder {config[jaxcnv_freq]} filePlaceholder filePlaceholder filePlaceholder {config[configuration_file]} filePlaceholder filePlaceholder /data/OGL/resources/gnomad/release-2.1.1/gnomad.v2.1.1.lof_metrics.by_gene.txt
 			fi
 			"""
 # [] or [[]] are both fine in biowulf2, the space is more important.

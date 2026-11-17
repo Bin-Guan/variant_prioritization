@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --gres=lscratch:200
 #SBATCH --cpus-per-task=28
-#SBATCH --mem=32g
+#SBATCH --mem=64g
 #SBATCH --time=24:0:0
 
 # to run snakemake as batch job

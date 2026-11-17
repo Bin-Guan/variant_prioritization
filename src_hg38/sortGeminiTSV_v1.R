@@ -318,7 +318,7 @@ print("###after writing filtered tsv file")
 manta_freq <- read_tsv(manta_freq_file, col_names = TRUE, na = c("NA", "full=NA", "", "None", "NONE", "."), col_types = cols(.default = col_character())) %>%
   type_convert()
 
-if ( !file.exists(manta_file)) {
+if ( manta_file == "filePlaceholder" ) {
   manta_sort <- data.frame("sample" = sampleName, "note" = "No manta calling")
 } else if (file.size(manta_file) == 0) {
   manta_sort <- data.frame("sample" = sampleName, "note" = "manta empty or not performed")
@@ -374,7 +374,7 @@ if ( !file.exists(manta_file)) {
 jaxcnv_freq <- read_tsv(jaxcnv_freq_file, col_names = TRUE, na = c("NA", "full=NA", "", "None", "NONE", "."), col_types = cols(.default = col_character())) %>%
   type_convert()
 
-if ( !file.exists(jaxcnv_file)) {
+if ( jaxcnv_file == "filePlaceholder") {
   jaxcnv_sort <- data.frame("sample" = sampleName, "note" = "No jaxcnv calling")
 } else if (file.size(jaxcnv_file) == 0) {
   jaxcnv_sort <- data.frame("sample" = sampleName, "note" = "Empty jaxcnv")
@@ -421,7 +421,7 @@ if ( !file.exists(jaxcnv_file)) {
   }
 }
 
-if ( roh_file == "filePlaceholder") {
+if ( !file.exists(roh_file) ) {
   roh <- data.frame("sample" = sampleName, "note" = "Roh not analyzed.")
 } else if (file.size(roh_file) == 0) { roh <- data.frame("sample" = sampleName, "note" = "Empty roh") 
 } else {
@@ -436,7 +436,7 @@ if ( roh_file == "filePlaceholder") {
     select(-autosome)
 }
 
-if ( scramble_mei_file == "filePlaceholder") {
+if ( !file.exists(scramble_mei_file) ) {
   scramble_mei <- data.frame("sample" = sampleName, "note" = "Scramble mei not analyzed.")
 } else if (file.size(scramble_mei_file) == 0) {
   scramble_mei <- data.frame("sample" = sampleName, "note" = "Empty scramble mei or not performed")
@@ -444,7 +444,7 @@ if ( scramble_mei_file == "filePlaceholder") {
   scramble_mei <- read_xlsx(scramble_mei_file, na = c("NA", "", "None", "NONE", "."))
 }
 
-if (scramble_del_file == "filePlaceholder") {
+if ( !file.exists(scramble_del_file) ) {
   scramble_del_sort <- data.frame("sample" = sampleName, "note" = "Scramble del not performed")
 } else if (file.size(scramble_del_file) == 0) {
   scramble_del_sort <- data.frame("sample" = sampleName, "note" = "Empty scramble del")
@@ -538,7 +538,7 @@ selectGene <- function(x, y){
 }
 
 #clinSV cds gene added to reccessive_count
-if ( clinsv_file == "filePlaceholder") {
+if ( !file.exists(clinsv_file)) {
   clinsv <- data.frame("sample" = sampleName, "note" = "ClinSV not analyzed.")
 } else if (file.size(clinsv_file) == 0) {
   clinsv <- data.frame("sample" = sampleName, "note" = "Empty clinsv or not performed")
@@ -631,7 +631,7 @@ ar <- gemini_filtered3 %>% filter(!chrom %in% c("X", "Y", "chrX", "chrY"), reces
 #ar_path also includes chrX; it includes the clinvar/hgmd path + pLoF only
 ar_path <- gemini_filtered3 %>% select(-recessive_cnt) %>% #removed priority_score >= 5.5, as already filtered above
   mutate(knownAR = ifelse(grepl("AR|XLR", omim_inheritance), 1, 0)) %>%
-  filter(caller == "fbDvg", clinvar_hgmd_score == 6 | grepl("pathogenic", clnsigconf, ignore.case = TRUE) | truncating_vep == 1 ) |> 
+  filter(caller %in% c("fbDvg", "hifi", "clr3g"), clinvar_hgmd_score == 6 | grepl("pathogenic", clnsigconf, ignore.case = TRUE) | truncating_vep == 1 ) |> 
   mutate(recessive_score = ifelse(gt_types == 1, 1, 2))
 ar_path_count <- select(ar_path, temp_ref_gene, recessive_score) |> group_by(temp_ref_gene) |> 
   summarise(recessive_cnt = sum(recessive_score), .groups = "drop")
@@ -646,7 +646,7 @@ ar_path <- left_join(ar_path, ar_path_count, by = "temp_ref_gene") |>
 ad_path <- gemini_filtered3 %>% filter(recessive_cnt == 1 & !omim_inheritance %in% c("AR") | recessive_cnt >=2 & grepl("AD", omim_inheritance)) %>% 
   arrange(desc(eyeGene), desc(maxpriorityscore), ref_gene, desc(priority_score)) %>% 
   select(-maxpriorityscore, -recessive_cnt, -temp_ref_gene) |> 
-  filter(caller == "fbDvg", (clinvar_hgmd_score == 6 & (is.na(omim_inheritance) | grepl("AD|XLD", omim_inheritance))) 
+  filter(caller %in% c("fbDvg", "hifi", "clr3g"), (clinvar_hgmd_score == 6 & (is.na(omim_inheritance) | grepl("AD|XLD", omim_inheritance))) 
                              | ( grepl("pathogenic", clnsigconf, ignore.case = TRUE) ) & grepl("AD|XLD", omim_inheritance)
                              | (pvs1 == 1 & (is.na(clnsig) | clinvar_hgmd_score >= 3) )
          )
@@ -655,7 +655,7 @@ path <- rbind(ar_path, ad_path) |> distinct()
 
 #openxlsx::write.xlsx(list("AR" = ar_path, "AD" = ad_path), file = "test.xlsx", firstRow = TRUE, firstCol = TRUE, keepNA = FALSE)
 
-ar_high <- gemini_filtered3 |> filter(caller == "fbDvg", is.na(gno2e3g_hom)|gno2e3g_hom < 3, af_oglx < 0.02, af_oglg < 0.02, max_af < 0.02, pmaxaf < 0.02,
+ar_high <- gemini_filtered3 |> filter(caller %in% c("fbDvg", "hifi", "clr3g"), is.na(gno2e3g_hom)|gno2e3g_hom < 3, af_oglx < 0.02, af_oglg < 0.02, max_af < 0.02, pmaxaf < 0.02,
                                       prscore_intervar > 5 | clinvar_hgmd_score > 3 | splice_score >= 6 | truncating_vep == 1 | insilico_score > 3 ) |> 
   mutate(recessive_score = ifelse(gt_types == 1, 1, 2)) |> 
   mutate(recessive_score = recessive_score + ifelse(grepl("clinSV", note), 1.5, 0)) |> 
@@ -682,7 +682,7 @@ ad <- gemini_filtered3 %>% filter(!chrom %in% c("X", "Y", "chrX", "chrY"),
 ad_high <- gemini_filtered3 %>% filter(recessive_cnt == 1 & !omim_inheritance %in% c("AR") | recessive_cnt >=2 & grepl("AD", omim_inheritance)) %>% 
   arrange(desc(eyeGene), desc(maxpriorityscore), ref_gene, desc(priority_score)) %>% 
   select(-maxpriorityscore, -recessive_cnt, -temp_ref_gene) |> 
-  filter(caller == "fbDvg", pmaxaf < 0.00001, max_af < 0.00001) |> 
+  filter(caller %in% c("fbDvg", "hifi", "clr3g"), pmaxaf < 0.00001, max_af < 0.00001) |> 
   filter(clinvar_hgmd_score ==6 | ( (loeuf < 0.5 | pli > 0.5) & (prscore_intervar > 8 | splice_score >= 6 | truncating_vep == 1 )) | 
            ( mis_z > 3 & insilico_score > 4 ) )
 #openxlsx::write.xlsx(list("AR" = ar_high, "AD" = ad_high), file = "test.xlsx", firstRow = TRUE, firstCol = TRUE, keepNA = FALSE)
@@ -719,7 +719,7 @@ summaryInfo <- data.frame("sample" = sampleName, "PatientDxPhenotype" = NA, "DxO
 if (scramble_del_file == "filePlaceholder") {
   openxlsx::write.xlsx(list("AR" = ar, "AD" = ad, "XR" = xR, "XD" = xD, "MT" = mutserve, "ACMG" = acmg, "all" = gemini_filtered1, "path" = path, "highImpact" = high_impact, "rareRef" = gemini_ref_var_rearrangeCol, "clinSV" = clinsv, "manta" = manta_sort, "jaxCNV" = jaxcnv_sort, "scramble_mei" = scramble_mei, "roh" = roh, "config" = config, "summary" = summaryInfo), file = gemini_xlsx_file, firstRow = TRUE, firstCol = TRUE, keepNA = FALSE)
 } else if (is.na(convading_file)) {
-  openxlsx::write.xlsx(list("AR" = ar, "AD" = ad, "XR" = xR, "XD" = xD, "ACMG" = acmg, "all" = gemini_filtered1, "path" = path, "highImpact" = high_impact, "rareRef" = gemini_ref_var_rearrangeCol, "manta" = manta_sort, "scramble_mei" = scramble_mei, "scramble_del" = scramble_del_sort, "roh" = roh, "config" = config, "summary" = summaryInfo), file = gemini_xlsx_file, firstRow = TRUE, firstCol = TRUE, keepNA = FALSE)
+  openxlsx::write.xlsx(list("AR" = ar, "AD" = ad, "XR" = xR, "XD" = xD, "MT" = mutserve, "ACMG" = acmg, "all" = gemini_filtered1, "path" = path, "highImpact" = high_impact, "rareRef" = gemini_ref_var_rearrangeCol, "manta" = manta_sort, "scramble_mei" = scramble_mei, "scramble_del" = scramble_del_sort, "roh" = roh, "config" = config, "summary" = summaryInfo), file = gemini_xlsx_file, firstRow = TRUE, firstCol = TRUE, keepNA = FALSE)
 } else {
     cnv <- read_tsv(convading_file, col_names = TRUE, na = c("NA", "", "None", "NONE", "."), col_types = cols(.default = col_character())) %>%
       type_convert() 
