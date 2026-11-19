@@ -647,7 +647,7 @@ ad_path <- gemini_filtered3 %>% filter(recessive_cnt == 1 & !omim_inheritance %i
   arrange(desc(eyeGene), desc(maxpriorityscore), ref_gene, desc(priority_score)) %>% 
   select(-maxpriorityscore, -recessive_cnt, -temp_ref_gene) |> 
   filter(caller %in% c("fbDvg", "hifi", "clr3g"), (clinvar_hgmd_score == 6 & (is.na(omim_inheritance) | grepl("AD|XLD", omim_inheritance))) 
-                             | ( grepl("pathogenic", clnsigconf, ignore.case = TRUE) ) & grepl("AD|XLD", omim_inheritance)
+                             | ( grepl("pathogenic", clnsigconf, ignore.case = TRUE) & grepl("AD|XLD", omim_inheritance) )
                              | (pvs1 == 1 & (is.na(clnsig) | clinvar_hgmd_score >= 3) )
          )
  
